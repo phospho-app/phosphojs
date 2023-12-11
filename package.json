@@ -1,0 +1,24 @@
+{
+  "name": "phospho",
+  "version": "0.0.1",
+  "description": "The Node package for phospho, the LLM analytics platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phospho-app/phosphojs.git"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "analytics"
+  ],
+  "author": "phospho team contact@phospho.app (https://phospho.app)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/phospho-app/phosphojs/issues"
+  },
+  "homepage": "https://github.com/phospho-app/phosphojs#readme"
+}
