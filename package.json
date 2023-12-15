@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/phospho-app/phosphojs/issues"
   },
-  "homepage": "https://github.com/phospho-app/phosphojs#readme"
+  "homepage": "https://github.com/phospho-app/phosphojs#readme",
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
 }
