@@ -15,7 +15,7 @@ npm install phospho
 
 You need to have a Phospho account to use this library. If you don't have one, you can sign up for free at [phospho.ai](https://phospho.ai).
 
-### Importing Phospho
+### Quickstart
 
 ```javascript
 const phospho = require('phospho');
