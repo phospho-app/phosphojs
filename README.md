@@ -13,6 +13,8 @@ npm install phospho
 
 ## Usage
 
+You need to have a Phospho account to use this library. If you don't have one, you can sign up for free at [phospho.ai](https://phospho.ai).
+
 ### Importing Phospho
 
 ```javascript
@@ -26,3 +28,7 @@ phospho.log({ input: 'User Query' }, { output: 'LLM Response' })
   .then(response => console.log('Log successful:', response))
   .catch(error => console.error('Error:', error));
 ```
+
+## More Information
+
+For more information, please visit the documentation at [docs.phospho.ai](https://docs.phospho.ai)
