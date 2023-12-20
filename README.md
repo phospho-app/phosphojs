@@ -24,7 +24,7 @@ const phospho = require('phospho');
 const phospho = new Phospho('your_auth_token', 'your_project_id');
 
 // Log an event
-phospho.log({ input: 'User Query' }, { output: 'LLM Response' })
+phospho.log('User Query', 'LLM Response')
   .then(response => console.log('Log successful:', response))
   .catch(error => console.error('Error:', error));
 ```
