@@ -52,7 +52,7 @@ const openai = new OpenAI({
   // const answer = result.choices[0].message.content;
 
   // Pass the full query and result to phospho
-  const loggedContent = phospho.log({ input: question, output: result });
+  const loggedContent = await phospho.log({ input: question, output: result });
 
   // This will extract the input and output from the query and result
   console.log("The following content was logged to Phospho:");

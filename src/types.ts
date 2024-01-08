@@ -4,11 +4,11 @@ export interface PhosphoInit {
   tick?: number;
 }
 
-export interface LogEvent {
-  input: any;
-  output?: any;
-  sessionId?: string;
-  taskId?: string;
+export interface LogContent {
+  input: string | Promise<string> | object | null;
+  output?: string | Promise<string> | object | null;
+  sessionId?: string | null;
+  taskId?: string | null;
   rawInput?: any;
   rawOutput?: any;
   // TODO: group those into "transformation"
@@ -19,6 +19,12 @@ export interface LogEvent {
   stream?: boolean;
   // Other data to log
   [key: string]: any;
+}
+
+export interface LogEvent {
+  id: string;
+  content: LogContent;
+  toLog: boolean;
 }
 
 export interface UserFeedback {
