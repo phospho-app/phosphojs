@@ -4,9 +4,13 @@ const detectStrFromInput = (input: any) => {
   }
   if (typeof input === "object") {
     // OpenAI
-    const inputFromOpenAI = input?.messages[-1]?.content;
-    if (inputFromOpenAI) {
-      return inputFromOpenAI;
+    const inputMessages = input?.messages;
+    if (inputMessages) {
+      // Get last element
+      const lastMessage = inputMessages[inputMessages.length - 1]?.content;
+      if (lastMessage) {
+        return lastMessage;
+      }
     }
 
     // Log the full JSON
@@ -22,10 +26,11 @@ const detectStrFromOutput = (output) => {
   }
   if (typeof output === "object") {
     // OpenAI
-    const outputFromOpenAI = output?.choices[0]?.message?.content;
-    if (outputFromOpenAI) {
-      return outputFromOpenAI;
-    }
+    const outputFromOpenAInoStream = output?.choices[0]?.message?.content;
+    if (outputFromOpenAInoStream) return outputFromOpenAInoStream;
+    const outputFromOpenAIStream = output?.choices[0]?.delta?.content;
+    if (outputFromOpenAIStream) return outputFromOpenAIStream;
+
     return JSON.stringify(output);
   }
   return output.toString();
