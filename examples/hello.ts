@@ -14,9 +14,23 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function FrogAssistant(query: string) {
-  // TODO : Add a way to directly log the full request to phospho
-  const result = await openai.chat.completions.create({
+(async () => {
+  const question = "What's the capital of Fashion ?";
+
+  const myAgent = (query: string) => {
+    // Here, you'd do complex stuff.
+    // But for this example we'll just return the same answer every time.
+    return "It's Paris of course.";
+  };
+
+  // Log events to phospho by passing strings directly
+  phospho.log({
+    input: question,
+    output: myAgent(question),
+  });
+
+  // If you use an LLM, you can log the full queries and answers to Phospho
+  const query = {
     model: "gpt-3.5-turbo",
     temperature: 0,
     // stream: true,
@@ -29,20 +43,18 @@ async function FrogAssistant(query: string) {
       },
       {
         role: "user",
-        content: query,
+        content: question,
       },
     ],
-  });
-  return result.choices[0].message.content;
-}
+  };
+  const result = openai.chat.completions.create({ ...query });
 
-(async () => {
-  const question = "What's the meaning of life?";
-  const answer = await FrogAssistant(question);
+  // const answer = result.choices[0].message.content;
 
-  // This is how you log to Phospho
-  const loggedContent = phospho.log({ input: question, output: answer });
+  // Pass the full query and result to phospho
+  const loggedContent = phospho.log({ input: question, output: result });
 
+  // This will extract the input and output from the query and result
   console.log("The following content was logged to Phospho:");
   console.log(loggedContent);
 })();
