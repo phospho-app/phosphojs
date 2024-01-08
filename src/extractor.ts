@@ -22,7 +22,7 @@ const detectStrFromOutput = (output) => {
   }
   if (typeof output === "object") {
     // OpenAI
-    const outputFromOpenAI = output?.choices[0]?.text;
+    const outputFromOpenAI = output?.choices[0]?.message?.content;
     if (outputFromOpenAI) {
       return outputFromOpenAI;
     }

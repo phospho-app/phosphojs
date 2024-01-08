@@ -133,7 +133,7 @@ class Phospho {
     });
 
     // Generate a taskId if not specified
-    taskId = taskId || this.latestTaskId || uuidv4();
+    taskId = taskId || uuidv4();
     if (!sessionId) sessionId = null;
 
     // Keep track of taskId and sessionId
@@ -150,7 +150,7 @@ class Phospho {
       // Metadata
       project_id: this.projectId,
       session_id: sessionId,
-      task_id: taskId || uuidv4(),
+      task_id: taskId,
       // Input
       input: extractedInputOutputToLog.inputToLog,
       raw_input: extractedInputOutputToLog.rawInputToLog,
@@ -246,16 +246,17 @@ class Phospho {
 
   wrap = (fn) => {
     // TODO
-    return async (...args) => {
-      const result = await fn(...args);
-      this.log({
-        input: args,
-        output: result,
-        sessionId: this.latestSessionId,
-        taskId: this.latestTaskId,
-      });
-      return result;
-    };
+    // If Async function, return a wrapped async function
+    if (typeof fn === "function") {
+      return async (...args) => {
+        const result = await fn(...args);
+        const loggedContent = await this.log({
+          input: args,
+          output: result,
+        });
+        return loggedContent;
+      };
+    }
   };
 
   /**
