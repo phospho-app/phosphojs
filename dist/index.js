@@ -1,10 +1,66 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } var _class;var __defProp = Object.defineProperty;
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var __defProp = Object.defineProperty;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined")
+    return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __objRest = (source, exclude) => {
+  var target = {};
+  for (var prop in source)
+    if (__hasOwnProp.call(source, prop) && exclude.indexOf(prop) < 0)
+      target[prop] = source[prop];
+  if (source != null && __getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(source)) {
+      if (exclude.indexOf(prop) < 0 && __propIsEnum.call(source, prop))
+        target[prop] = source[prop];
+    }
+  return target;
+};
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
 
 // src/context.ts
 var _unctx = require('unctx');
+var _async_hooks = require('async_hooks');
 var user = _unctx.createContext.call(void 0, {
-  asyncContext: true
+  asyncContext: true,
+  AsyncLocalStorage: _async_hooks.AsyncLocalStorage
 });
 var context_default = {
   user
@@ -15,10 +71,11 @@ var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 
 // src/utils.ts
 var lookupEnvVariable = /* @__PURE__ */ __name((variable) => {
-  if (typeof process !== "undefined" && _optionalChain([process, 'access', _ => _.env, 'optionalAccess', _2 => _2[variable]])) {
+  var _a, _b;
+  if (typeof process !== "undefined" && ((_a = process.env) == null ? void 0 : _a[variable])) {
     return process.env[variable];
   }
-  if (typeof Deno !== "undefined" && _optionalChain([Deno, 'access', _3 => _3.env, 'optionalAccess', _4 => _4.get, 'call', _5 => _5(variable)])) {
+  if (typeof Deno !== "undefined" && ((_b = Deno.env) == null ? void 0 : _b.get(variable))) {
     return Deno.env.get(variable);
   }
   return void 0;
@@ -34,19 +91,15 @@ var debounce = /* @__PURE__ */ __name((func, timeout = 500) => {
 }, "debounce");
 
 // src/phospho.ts
+var { v4: uuidv4 } = __require("uuid");
 var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
 var DEFAULT_API_VERSION = "/v0";
 var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
-var Phospho = (_class = class {
-  static {
-    __name(this, "Phospho");
-  }
-  
-  
-  __init() {this.tick = 500}
-  
-  __init2() {this.logQueue = []}
-  constructor(context) {;_class.prototype.__init.call(this);_class.prototype.__init2.call(this);_class.prototype.__init3.call(this);
+var _Phospho = class _Phospho {
+  constructor(context) {
+    this.tick = 500;
+    this.logQueue = [];
+    this.debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
     this.init({
       apiKey: lookupEnvVariable("PHOSPHO_API_KEY"),
       projectId: lookupEnvVariable("PHOSPHO_PROJECT_ID")
@@ -61,61 +114,76 @@ var Phospho = (_class = class {
     if (tick)
       this.tick = tick;
   }
-  async log({
-    input,
-    output,
-    sessionId,
-    taskId,
-    rawInput,
-    rawOutput,
-    inputToStrFunction,
-    outputToStrFunction,
-    outputToTaskIdAndToLogFunction,
-    concatenateRawOutputsIfTaskIdExists,
-    stream,
-    ...rest
-  }) {
-    const logEventData = {
-      // The UTC timestamp rounded to the second
-      client_created_at: Math.floor(Date.now() / 1e3),
-      // Metadata
-      project_id: this.projectId,
-      session_id: sessionId || crypto.randomUUID(),
-      task_id: taskId || crypto.randomUUID(),
-      // Input
-      input,
-      raw_input: rawInput || input,
-      raw_input_type_name: typeof rawInput,
-      // Output
-      output: output || this.context,
-      raw_output: rawOutput || output,
-      raw_output_type_name: typeof rawOutput,
-      // Other
-      ...rest
-    };
-    this.logQueue.push(logEventData);
-    this.debouncedProcessQueue();
+  log(_a) {
+    return __async(this, null, function* () {
+      var _b = _a, {
+        input,
+        output,
+        sessionId,
+        taskId,
+        rawInput,
+        rawOutput,
+        inputToStrFunction,
+        outputToStrFunction,
+        outputToTaskIdAndToLogFunction,
+        concatenateRawOutputsIfTaskIdExists,
+        stream
+      } = _b, rest = __objRest(_b, [
+        "input",
+        "output",
+        "sessionId",
+        "taskId",
+        "rawInput",
+        "rawOutput",
+        "inputToStrFunction",
+        "outputToStrFunction",
+        "outputToTaskIdAndToLogFunction",
+        "concatenateRawOutputsIfTaskIdExists",
+        "stream"
+      ]);
+      const logEventData = __spreadValues({
+        // The UTC timestamp rounded to the second
+        client_created_at: Math.floor(Date.now() / 1e3),
+        // Metadata
+        project_id: this.projectId,
+        session_id: sessionId || uuidv4(),
+        task_id: taskId || uuidv4(),
+        // Input
+        input,
+        raw_input: rawInput || input,
+        raw_input_type_name: typeof rawInput,
+        // Output
+        output: output || this.context,
+        raw_output: rawOutput || output,
+        raw_output_type_name: typeof rawOutput
+      }, rest);
+      this.logQueue.push(logEventData);
+      this.debouncedProcessQueue();
+    });
   }
-  async sendBatch() {
-    try {
-      const url = `${BASE_URL}/log/${this.projectId}`;
-      const data = {
-        batched_log_events: this.logQueue
-      };
-      const response = await _axios2.default.post(url, data, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json"
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error posting log data:", error);
-      throw error;
-    }
+  sendBatch() {
+    return __async(this, null, function* () {
+      try {
+        const url = `${BASE_URL}/log/${this.projectId}`;
+        const data = {
+          batched_log_events: this.logQueue
+        };
+        const response = yield _axios2.default.post(url, data, {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json"
+          }
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error posting log data:", error);
+        throw error;
+      }
+    });
   }
-  __init3() {this.debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick)}
-}, _class);
+};
+__name(_Phospho, "Phospho");
+var Phospho = _Phospho;
 var phospho_default = Phospho;
 
 // src/index.ts

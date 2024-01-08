@@ -23,7 +23,7 @@ declare class Phospho {
     projectId: string;
     tick: number;
     context: any;
-    private logQueue;
+    logQueue: any[];
     constructor(context?: any);
     init({ apiKey, projectId, tick }?: PhosphoInit): void;
     log({ input, output, sessionId, taskId, rawInput, rawOutput, inputToStrFunction, outputToStrFunction, outputToTaskIdAndToLogFunction, concatenateRawOutputsIfTaskIdExists, stream, ...rest }: LogEvent): Promise<void>;

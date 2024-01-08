@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
+        "target": "ES2015",
+        "module": "ES2015",
         "types": [
             "node"
         ],
@@ -12,7 +12,7 @@
         "skipLibCheck": true,
         "strict": false, // TODO: strict: true
         "strictBindCallApply": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
     },
     "include": [
         "./src/*"
