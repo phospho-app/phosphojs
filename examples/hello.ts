@@ -17,7 +17,7 @@ const openai = new OpenAI({
 (async () => {
   const question = "What's the capital of Fashion ?";
 
-  const myAgent = (query: string) => {
+  const myAgent = (query) => {
     // Here, you'd do complex stuff.
     // But for this example we'll just return the same answer every time.
     return "It's Paris of course.";
@@ -47,7 +47,7 @@ const openai = new OpenAI({
       },
     ],
   };
-  const result = openai.chat.completions.create({ ...query });
+  const result = openai.chat.completions.create(query);
 
   // const answer = result.choices[0].message.content;
 
