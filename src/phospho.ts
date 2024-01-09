@@ -51,6 +51,104 @@ class Phospho {
     return this.latestTaskId;
   }
 
+  async _log(
+    input,
+    output,
+    sessionId,
+    taskId,
+    rawInput,
+    rawOutput,
+    inputToStrFunction,
+    outputToStrFunction,
+    concatenateRawOutputsIfTaskIdExists,
+    toLog,
+    ...rest
+  ) {
+    // If input or output are async, await them
+    if (input instanceof Promise) {
+      input = await input;
+    }
+    if (output instanceof Promise) {
+      output = await output;
+    }
+
+    const extractedInputOutputToLog = getInputOutput({
+      input,
+      output,
+      rawInput,
+      rawOutput,
+      inputToStrFunction,
+      outputToStrFunction,
+    });
+
+    // Generate a taskId if not specified
+    taskId = taskId || uuidv4();
+    if (!sessionId) sessionId = null;
+
+    // Keep track of taskId and sessionId
+    this.latestSessionId = sessionId;
+    this.latestTaskId = taskId;
+
+    const logContent = {
+      // The UTC timestamp rounded to the second
+      client_created_at: Math.floor(Date.now() / 1000),
+      // Metadata
+      project_id: this.projectId,
+      session_id: sessionId,
+      task_id: taskId,
+      // Input
+      input: extractedInputOutputToLog.inputToLog,
+      raw_input: extractedInputOutputToLog.rawInputToLog,
+      raw_input_type_name: typeof extractedInputOutputToLog.rawInputToLog,
+      // Output
+      output: extractedInputOutputToLog.outputToLog,
+      raw_output: extractedInputOutputToLog.rawOutputToLog,
+      raw_output_type_name: typeof extractedInputOutputToLog.rawOutputToLog,
+      // Other
+      ...rest,
+    };
+
+    // If taskId exists in the logQueue, concatenate the raw outputs
+    if (this.logQueue.has(taskId)) {
+      const existingLogEvent = this.logQueue.get(taskId);
+
+      let newOutput: string = logContent.output;
+      let newRawOutput = logContent.raw_output;
+
+      // If output is a string, concatenate
+      if (
+        typeof existingLogEvent.content.output === "string" &&
+        typeof logContent.output === "string"
+      ) {
+        newOutput = existingLogEvent.content.output + logContent.output;
+      }
+
+      // Concatenate raw outputs if specified
+      if (concatenateRawOutputsIfTaskIdExists) {
+        // If rawOutput is a list, concatenate
+        if (Array.isArray(existingLogEvent.content.raw_output)) {
+          newRawOutput = [
+            ...existingLogEvent.content.raw_output,
+            logContent.raw_output,
+          ];
+        } else {
+          newRawOutput = [
+            existingLogEvent.content.raw_output,
+            logContent.raw_output,
+          ];
+        }
+      }
+    }
+
+    // Add to the log queue
+    this.logQueue.set(taskId, { id: taskId, content: logContent, toLog });
+    // Trigger sendBatch after a delay (500ms by default)
+    this.debouncedProcessQueue();
+
+    // if async, await
+    return logContent;
+  }
+
   /**
    * Phospho's main all-purpose logging endpoint, with support for streaming.
 
@@ -115,93 +213,23 @@ class Phospho {
       );
     }
 
-    // If input or output are async, await them
-    if (input instanceof Promise) {
-      input = await input;
+    if (!stream) {
+      this._log(
+        input,
+        output,
+        sessionId,
+        taskId,
+        rawInput,
+        rawOutput,
+        inputToStrFunction,
+        outputToStrFunction,
+        concatenateRawOutputsIfTaskIdExists,
+        true
+        // ...rest,
+      );
+    } else {
+      // TODO !
     }
-    if (output instanceof Promise) {
-      output = await output;
-    }
-
-    const extractedInputOutputToLog = getInputOutput({
-      input,
-      output,
-      rawInput,
-      rawOutput,
-      inputToStrFunction,
-      outputToStrFunction,
-    });
-
-    // Generate a taskId if not specified
-    taskId = taskId || uuidv4();
-    if (!sessionId) sessionId = null;
-
-    // Keep track of taskId and sessionId
-    this.latestSessionId = sessionId;
-    this.latestTaskId = taskId;
-
-    // By default no streaming
-    if (!stream) stream = false;
-    const toLog = !stream; // In stream, we don't log the output by default
-
-    const logContent = {
-      // The UTC timestamp rounded to the second
-      client_created_at: Math.floor(Date.now() / 1000),
-      // Metadata
-      project_id: this.projectId,
-      session_id: sessionId,
-      task_id: taskId,
-      // Input
-      input: extractedInputOutputToLog.inputToLog,
-      raw_input: extractedInputOutputToLog.rawInputToLog,
-      raw_input_type_name: typeof extractedInputOutputToLog.rawInputToLog,
-      // Output
-      output: extractedInputOutputToLog.outputToLog,
-      raw_output: extractedInputOutputToLog.rawOutputToLog,
-      raw_output_type_name: typeof extractedInputOutputToLog.rawOutputToLog,
-      // Other
-      ...rest,
-    };
-
-    // If taskId exists in the logQueue, concatenate the raw outputs
-    if (this.logQueue.has(taskId)) {
-      const existingLogEvent = this.logQueue.get(taskId);
-
-      let newOutput: string = logContent.output;
-      let newRawOutput = logContent.raw_output;
-
-      // If output is a string, concatenate
-      if (
-        typeof existingLogEvent.content.output === "string" &&
-        typeof logContent.output === "string"
-      ) {
-        newOutput = existingLogEvent.content.output + logContent.output;
-      }
-
-      // Concatenate raw outputs if specified
-      if (concatenateRawOutputsIfTaskIdExists) {
-        // If rawOutput is a list, concatenate
-        if (Array.isArray(existingLogEvent.content.raw_output)) {
-          newRawOutput = [
-            ...existingLogEvent.content.raw_output,
-            logContent.raw_output,
-          ];
-        } else {
-          newRawOutput = [
-            existingLogEvent.content.raw_output,
-            logContent.raw_output,
-          ];
-        }
-      }
-    }
-
-    // Add to the log queue
-    this.logQueue.set(taskId, { id: taskId, content: logContent, toLog });
-    // Trigger sendBatch after a delay (500ms by default)
-    this.debouncedProcessQueue();
-
-    // if async, await
-    return logContent;
   }
 
   /**

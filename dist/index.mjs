@@ -90,6 +90,84 @@ var debounce = /* @__PURE__ */ __name((func, timeout = 500) => {
   };
 }, "debounce");
 
+// src/extractor.ts
+var detectStrFromInput = /* @__PURE__ */ __name((input) => {
+  var _a;
+  if (typeof input === "string") {
+    return input;
+  }
+  if (typeof input === "object") {
+    const inputMessages = input == null ? void 0 : input.messages;
+    if (inputMessages) {
+      const lastMessage = (_a = inputMessages[inputMessages.length - 1]) == null ? void 0 : _a.content;
+      if (lastMessage) {
+        return lastMessage;
+      }
+    }
+    return JSON.stringify(input);
+  }
+  return input.toString();
+}, "detectStrFromInput");
+var detectStrFromOutput = /* @__PURE__ */ __name((output) => {
+  var _a, _b, _c, _d;
+  if (typeof output === "string") {
+    return output;
+  }
+  if (typeof output === "object") {
+    const outputFromOpenAInoStream = (_b = (_a = output == null ? void 0 : output.choices[0]) == null ? void 0 : _a.message) == null ? void 0 : _b.content;
+    if (outputFromOpenAInoStream)
+      return outputFromOpenAInoStream;
+    const outputFromOpenAIStream = (_d = (_c = output == null ? void 0 : output.choices[0]) == null ? void 0 : _c.delta) == null ? void 0 : _d.content;
+    if (outputFromOpenAIStream)
+      return outputFromOpenAIStream;
+    return JSON.stringify(output);
+  }
+  return output.toString();
+}, "detectStrFromOutput");
+var getInputOutput = /* @__PURE__ */ __name(({
+  input,
+  output,
+  rawInput,
+  rawOutput,
+  inputToStrFunction,
+  outputToStrFunction
+}) => {
+  if (!inputToStrFunction) {
+    inputToStrFunction = detectStrFromInput;
+  }
+  if (!outputToStrFunction) {
+    outputToStrFunction = detectStrFromOutput;
+  }
+  let inputToLog = null;
+  let rawInputToLog = null;
+  let outputToLog = null;
+  let rawOutputToLog = null;
+  rawInputToLog = input;
+  if (typeof input === "string") {
+    inputToLog = input;
+  } else {
+    inputToLog = inputToStrFunction(input);
+  }
+  if (rawInput) {
+    rawInputToLog = rawInput;
+  }
+  rawOutputToLog = output;
+  if (typeof output === "string") {
+    outputToLog = output;
+  } else if (output) {
+    outputToLog = outputToStrFunction(output);
+  }
+  if (rawOutput) {
+    rawOutputToLog = rawOutput;
+  }
+  return {
+    inputToLog,
+    rawInputToLog,
+    outputToLog,
+    rawOutputToLog
+  };
+}, "getInputOutput");
+
 // src/phospho.ts
 var { v4: uuidv4 } = __require("uuid");
 var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
@@ -98,8 +176,82 @@ var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
 var _Phospho = class _Phospho {
   constructor(context) {
     this.tick = 500;
-    this.logQueue = [];
+    // Queue of log events as a Mapping of {taskId: logEvent}
+    this.logQueue = /* @__PURE__ */ new Map();
+    this.latestTaskId = null;
+    this.latestSessionId = null;
+    // Used to delay the sending of the batch and to avoid sending too many requests
     this.debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
+    this.wrap = /* @__PURE__ */ __name((fn) => {
+      if (typeof fn === "function") {
+        return (...args) => __async(this, null, function* () {
+          const result = yield fn(...args);
+          const loggedContent = yield this.log({
+            input: args,
+            output: result
+          });
+          return loggedContent;
+        });
+      }
+    }, "wrap");
+    /**
+     * Flag a task already logged to phospho as a `success` or a `failure`. This is useful to collect human feedback.
+     *
+     * Note: Feedback can be directly logged with `phospho.log` by passing `flag` as a keyword argument.
+     *
+     * @param taskId The task id. Get the taskId from the returned value of phospho.log, use phospho.newTask to generate a new task id, or use pospho.latestTaskId
+     * @param flag The flag to set, either `success` or `failure`
+     * @param notes Optional notes to add to the task. For example, the reason for the flag.
+     * @param source Optional source of the flag. For example, the name of the user who flagged the task.
+     * @param rawFlag Optional raw flag. If flag is not specified, rawFlag is used to determine the flag. For example, if rawFlag is "👍", then flag is "success".
+     * @param rawFlagToFlag Optional function to convert rawFlag to flag. By default, "success", "👍", "🙂", "😀" are set to be "success"
+     * @returns The updated task
+     */
+    this.userFeedback = /* @__PURE__ */ __name(({
+      taskId,
+      flag,
+      notes,
+      source,
+      rawFlag,
+      rawFlagToFlag
+    }) => {
+      if (!flag) {
+        if (!rawFlag) {
+          console.warn(
+            "Either flag or raw_flag must be specified when calling user_feedback. Nothing logged"
+          );
+          return;
+        } else {
+          if (!rawFlagToFlag) {
+            rawFlagToFlag = /* @__PURE__ */ __name((rawFlag2) => {
+              if (["success", "\u{1F44D}", "\u{1F642}", "\u{1F600}"].includes(rawFlag2)) {
+                return "success";
+              } else {
+                return "failure";
+              }
+            }, "rawFlagToFlag");
+          }
+          flag = rawFlagToFlag(rawFlag);
+        }
+      }
+      const updatedTask = axios.post(
+        `${BASE_URL}/task/${taskId}`,
+        {
+          flag,
+          notes,
+          source
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json"
+          }
+        }
+      ).then((response) => {
+        return response.data;
+      });
+      return updatedTask;
+    }, "userFeedback");
     this.init({
       apiKey: lookupEnvVariable("PHOSPHO_API_KEY"),
       projectId: lookupEnvVariable("PHOSPHO_PROJECT_ID")
@@ -114,6 +266,122 @@ var _Phospho = class _Phospho {
     if (tick)
       this.tick = tick;
   }
+  /**
+   * Generate a new session id
+   */
+  newSession() {
+    this.latestSessionId = uuidv4();
+    return this.latestSessionId;
+  }
+  /**
+   * Generate a new task id
+   */
+  newTask() {
+    this.latestTaskId = uuidv4();
+    return this.latestTaskId;
+  }
+  _log(input, output, sessionId, taskId, rawInput, rawOutput, inputToStrFunction, outputToStrFunction, concatenateRawOutputsIfTaskIdExists, toLog, ...rest) {
+    return __async(this, null, function* () {
+      if (input instanceof Promise) {
+        input = yield input;
+      }
+      if (output instanceof Promise) {
+        output = yield output;
+      }
+      const extractedInputOutputToLog = getInputOutput({
+        input,
+        output,
+        rawInput,
+        rawOutput,
+        inputToStrFunction,
+        outputToStrFunction
+      });
+      taskId = taskId || uuidv4();
+      if (!sessionId)
+        sessionId = null;
+      this.latestSessionId = sessionId;
+      this.latestTaskId = taskId;
+      const logContent = __spreadValues({
+        // The UTC timestamp rounded to the second
+        client_created_at: Math.floor(Date.now() / 1e3),
+        // Metadata
+        project_id: this.projectId,
+        session_id: sessionId,
+        task_id: taskId,
+        // Input
+        input: extractedInputOutputToLog.inputToLog,
+        raw_input: extractedInputOutputToLog.rawInputToLog,
+        raw_input_type_name: typeof extractedInputOutputToLog.rawInputToLog,
+        // Output
+        output: extractedInputOutputToLog.outputToLog,
+        raw_output: extractedInputOutputToLog.rawOutputToLog,
+        raw_output_type_name: typeof extractedInputOutputToLog.rawOutputToLog
+      }, rest);
+      if (this.logQueue.has(taskId)) {
+        const existingLogEvent = this.logQueue.get(taskId);
+        let newOutput = logContent.output;
+        let newRawOutput = logContent.raw_output;
+        if (typeof existingLogEvent.content.output === "string" && typeof logContent.output === "string") {
+          newOutput = existingLogEvent.content.output + logContent.output;
+        }
+        if (concatenateRawOutputsIfTaskIdExists) {
+          if (Array.isArray(existingLogEvent.content.raw_output)) {
+            newRawOutput = [
+              ...existingLogEvent.content.raw_output,
+              logContent.raw_output
+            ];
+          } else {
+            newRawOutput = [
+              existingLogEvent.content.raw_output,
+              logContent.raw_output
+            ];
+          }
+        }
+      }
+      this.logQueue.set(taskId, { id: taskId, content: logContent, toLog });
+      this.debouncedProcessQueue();
+      return logContent;
+    });
+  }
+  /**
+     * Phospho's main all-purpose logging endpoint, with support for streaming.
+  
+      Usage:
+      ```
+      phospho.log(input="input", output="output")
+      ```
+  
+      By default, phospho will try to interpret a string representation from `input` and `output`.
+      For example, OpenAI API calls. Arguments passed as `input` and `output` are then stored
+      in `rawInput` and `rawOutput`, unless those are specified.
+  
+      You can customize this behaviour using `inputToStrFunction` and `outputToStrFunction`.
+  
+      `sessionId` is used to group logs together. For example, a single conversation.
+  
+      `taskId` is used to identify a single task. For example, a single message in a conversation.
+      This is useful to log user feedback on a specific task (see phospho.userFeedback).
+  
+      `stream` is used to log a stream of data. For example, a generator. If `stream=True`, then
+      `phospho.log` returns a generator that also logs every individual output. See `phospho.wrap`
+      for more details.
+  
+      Every other keyword parameters in `...rest` will be added to the log content and stored.
+  
+     * @param input The input to the task
+     * @param output The output of the task
+     * @param sessionId The session id
+     * @param taskId The task id
+     * @param rawInput The raw input
+     * @param rawOutput The raw output
+     * @param inputToStrFunction A function to convert the input to a string
+     * @param outputToStrFunction A function to convert the output to a string
+     * @param outputToTaskIdAndToLogFunction A function to convert the output to a task id and a boolean indicating whether to log the output. Useful for streaming.
+     * @param concatenateRawOutputsIfTaskIdExists Whether to concatenate the raw outputs if a task id exists
+     * @param stream Enable compatibility with streaming input
+     * @param rest Any other data to log
+     * @returns The logged event, including the taskId.
+     */
   log(_a) {
     return __async(this, null, function* () {
       var _b = _a, {
@@ -125,7 +393,6 @@ var _Phospho = class _Phospho {
         rawOutput,
         inputToStrFunction,
         outputToStrFunction,
-        outputToTaskIdAndToLogFunction,
         concatenateRawOutputsIfTaskIdExists,
         stream
       } = _b, rest = __objRest(_b, [
@@ -137,36 +404,57 @@ var _Phospho = class _Phospho {
         "rawOutput",
         "inputToStrFunction",
         "outputToStrFunction",
-        "outputToTaskIdAndToLogFunction",
         "concatenateRawOutputsIfTaskIdExists",
         "stream"
       ]);
-      const logEventData = __spreadValues({
-        // The UTC timestamp rounded to the second
-        client_created_at: Math.floor(Date.now() / 1e3),
-        // Metadata
-        project_id: this.projectId,
-        session_id: sessionId || uuidv4(),
-        task_id: taskId || uuidv4(),
-        // Input
-        input,
-        raw_input: rawInput || input,
-        raw_input_type_name: typeof rawInput,
-        // Output
-        output: output || this.context,
-        raw_output: rawOutput || output,
-        raw_output_type_name: typeof rawOutput
-      }, rest);
-      this.logQueue.push(logEventData);
-      this.debouncedProcessQueue();
+      if (!this.apiKey) {
+        throw new Error(
+          "Phospho API key not found. Please call phospho.init({apiKey: ...}) first."
+        );
+      }
+      if (!this.projectId) {
+        throw new Error(
+          "Phospho project id not found. Please call phospho.init({projectId: ...}) first."
+        );
+      }
+      if (!stream) {
+        this._log(
+          input,
+          output,
+          sessionId,
+          taskId,
+          rawInput,
+          rawOutput,
+          inputToStrFunction,
+          outputToStrFunction,
+          concatenateRawOutputsIfTaskIdExists,
+          true
+          // ...rest,
+        );
+      } else {
+      }
     });
   }
+  /**
+   * Send a batch of log events to Phospho
+   */
   sendBatch() {
     return __async(this, null, function* () {
       try {
+        if (this.logQueue.size === 0) {
+          return;
+        }
+        const batchedLogEvents = Array.from(this.logQueue.values());
+        batchedLogEvents.filter((logEvent) => logEvent.toLog);
+        if (batchedLogEvents.length === 0) {
+          return;
+        }
+        const batchedLogContent = batchedLogEvents.map(
+          (logEvent) => logEvent.content
+        );
         const url = `${BASE_URL}/log/${this.projectId}`;
         const data = {
-          batched_log_events: this.logQueue
+          batched_log_events: batchedLogContent
         };
         const response = yield axios.post(url, data, {
           headers: {
@@ -174,10 +462,9 @@ var _Phospho = class _Phospho {
             "Content-Type": "application/json"
           }
         });
-        return response.data;
+        return;
       } catch (error) {
-        console.error("Error posting log data:", error);
-        throw error;
+        console.warn("Error sending batch to Phospho", error);
       }
     });
   }

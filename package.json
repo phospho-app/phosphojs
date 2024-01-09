@@ -31,9 +31,7 @@
   "homepage": "https://github.com/phospho-app/phosphojs#readme",
   "dependencies": {
     "axios": "^1.6.2",
-    "tsx": "^4.7.0",
     "unctx": "^2.3.1",
-    "update": "^0.4.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -41,6 +39,7 @@
     "dotenv": "^16.3.1",
     "langchain": "^0.1.1",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
   }
 }
