@@ -14,7 +14,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-(async () => {
+/**
+ * This is the minimal example of logging to Phospho.
+ */
+const simpleLog = async () => {
   const question = "What's the capital of Fashion ?";
 
   const myAgent = (query) => {
@@ -28,12 +31,18 @@ const openai = new OpenAI({
     input: question,
     output: myAgent(question),
   });
+};
 
-  // If you use an LLM, you can log the full queries and answers to Phospho
+/**
+ * This example shows how to log OpenAI Chat completions to Phospho.
+ * Phospho extracts the input and output from the OpenAI Chat query.
+ */
+const extractLog = async () => {
+  // If you pass full OpenAI queries and results to Phospho, it will extract the input and output for you.
+  const question = "What's the capital of Fashion ?";
   const query = {
     model: "gpt-3.5-turbo",
     temperature: 0,
-    // stream: true,
     seed: 123,
     messages: [
       {
@@ -46,15 +55,51 @@ const openai = new OpenAI({
         content: question,
       },
     ],
+    stream: false,
   };
   const result = openai.chat.completions.create(query);
-
-  // const answer = result.choices[0].message.content;
-
-  // Pass the full query and result to phospho
   const loggedContent = await phospho.log({ input: query, output: result });
 
-  // This will extract the input and output from the query and result
-  console.log("The following content was logged to Phospho:");
-  console.log(loggedContent);
+  // Look at the fields "input" and "output" in the logged content
+  // Original fields are in "raw_input" and "raw_output"
+  console.log("The following content was logged to Phospho:", loggedContent);
+};
+
+/**
+ * This example shows how to stream OpenAI Chat completions to Phospho.
+ * Phospho combines the streamed outputs.
+ */
+const logStream = async () => {
+  // This should also work with streaming
+  const question = "What's the capital of Fashion ?";
+  const query = {
+    model: "gpt-3.5-turbo",
+    temperature: 0,
+    seed: 123,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are an helpful frog who gives life advice to people. You say *ribbit* at the end of each sentence and make other frog noises in between. You answer shortly in less than 50 words.",
+      },
+      {
+        role: "user",
+        content: question,
+      },
+    ],
+    stream: true,
+  };
+  const stream = await openai.chat.completions.create(query);
+  // const loggedContent = await phospho.log({ input: query, output: result });
+
+  for await (const chunk of stream) {
+    process.stdout.write(chunk.choices[0]?.delta?.content || "");
+  }
+};
+
+// Main function
+(async () => {
+  await simpleLog();
+  // await extractLog();
+  // await logStream();
 })();
