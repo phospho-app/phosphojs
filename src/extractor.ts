@@ -26,10 +26,15 @@ const detectStrFromOutput = (output) => {
   }
   if (typeof output === "object") {
     // OpenAI
-    const outputFromOpenAInoStream = output?.choices[0]?.message?.content;
-    if (outputFromOpenAInoStream) return outputFromOpenAInoStream;
-    const outputFromOpenAIStream = output?.choices[0]?.delta?.content;
-    if (outputFromOpenAIStream) return outputFromOpenAIStream;
+    const choiceMessageContent = output?.choices[0]?.message?.content;
+    if (choiceMessageContent !== undefined) return choiceMessageContent;
+    const choiceDelta = output?.choices[0]?.delta;
+    if (choiceDelta !== undefined) {
+      const choiceDeltaContent = choiceDelta?.content;
+      if (choiceDeltaContent !== undefined) return choiceDeltaContent;
+      const choiceFinishReason = output?.choices[0]?.finish_reason;
+      if (choiceFinishReason !== undefined) return ""; // Generation finished
+    }
 
     return JSON.stringify(output);
   }

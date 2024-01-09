@@ -112,7 +112,7 @@ class Phospho {
     if (this.logQueue.has(taskId)) {
       const existingLogEvent = this.logQueue.get(taskId);
 
-      let newOutput: string = logContent.output;
+      let newOutput: string | null = logContent.output;
       let newRawOutput = logContent.raw_output;
 
       // If output is a string, concatenate
@@ -121,7 +121,10 @@ class Phospho {
         typeof logContent.output === "string"
       ) {
         newOutput = existingLogEvent.content.output + logContent.output;
-        logContent.output = newOutput;
+      }
+      // It output is null, use the existing output
+      else if (logContent.output === null) {
+        newOutput = existingLogEvent.content.output.toString();
       }
 
       // Concatenate raw outputs if specified
@@ -140,8 +143,11 @@ class Phospho {
             logContent.raw_output,
           ];
         }
-        logContent.raw_output = newRawOutput;
       }
+
+      // Update the logContent
+      logContent.output = newOutput;
+      logContent.raw_output = newRawOutput;
     }
 
     // Add to the log queue
@@ -189,7 +195,7 @@ class Phospho {
    * @param outputToTaskIdAndToLogFunction A function to convert the output to a task id and a boolean indicating whether to log the output. Useful for streaming.
    * @param concatenateRawOutputsIfTaskIdExists Whether to concatenate the raw outputs if a task id exists
    * @param stream Enable compatibility with streaming input
-   * @param rest Any other data to log as keyword arguments (ex: flag="success", metadata={...})
+   * @param rest Any other data to log as keyword arguments (ex: flag: "success", metadata: {...})
    * @returns The logged event, including the taskId.
    */
   async log({
