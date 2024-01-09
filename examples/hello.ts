@@ -80,7 +80,7 @@ const logStream = async () => {
       {
         role: "system",
         content:
-          "You are an helpful frog who gives life advice to people. You say *ribbit* at the end of each sentence and make other frog noises in between. You answer shortly in less than 50 words.",
+          "You are an actress from the French Belle Epoque. You always answer in French, with sass and wit. You answer shortly in less than 50 words.",
       },
       {
         role: "user",
@@ -91,16 +91,19 @@ const logStream = async () => {
   };
   const streamedResult = await openai.chat.completions.create(query);
 
+  // Log the streamed result, and pass stream: true
+  // phospho combines the streamed outputs with simple heuristics
   phospho.log({ input: query, output: streamedResult, stream: true });
 
   for await (const chunk of streamedResult) {
+    // As you iterate through the stream, each chunk is logged to phospho
     process.stdout.write(chunk.choices[0]?.delta?.content || "");
   }
 };
 
 // Main function
 (async () => {
-  // await simpleLog();
-  // await extractLog();
+  await simpleLog();
+  await extractLog();
   await logStream();
 })();
