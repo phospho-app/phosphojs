@@ -51,7 +51,7 @@ class Phospho {
     return this.latestTaskId;
   }
 
-  async _log(
+  private async _log({
     input,
     output,
     sessionId,
@@ -63,7 +63,7 @@ class Phospho {
     concatenateRawOutputsIfTaskIdExists,
     toLog,
     ...rest
-  ) {
+  }) {
     // If input or output are async, await them
     if (input instanceof Promise) {
       input = await input;
@@ -121,9 +121,12 @@ class Phospho {
         typeof logContent.output === "string"
       ) {
         newOutput = existingLogEvent.content.output + logContent.output;
+        logContent.output = newOutput;
       }
 
       // Concatenate raw outputs if specified
+      if (concatenateRawOutputsIfTaskIdExists === undefined)
+        concatenateRawOutputsIfTaskIdExists = true;
       if (concatenateRawOutputsIfTaskIdExists) {
         // If rawOutput is a list, concatenate
         if (Array.isArray(existingLogEvent.content.raw_output)) {
@@ -137,6 +140,7 @@ class Phospho {
             logContent.raw_output,
           ];
         }
+        logContent.raw_output = newRawOutput;
       }
     }
 
@@ -185,7 +189,7 @@ class Phospho {
    * @param outputToTaskIdAndToLogFunction A function to convert the output to a task id and a boolean indicating whether to log the output. Useful for streaming.
    * @param concatenateRawOutputsIfTaskIdExists Whether to concatenate the raw outputs if a task id exists
    * @param stream Enable compatibility with streaming input
-   * @param rest Any other data to log
+   * @param rest Any other data to log as keyword arguments (ex: flag="success", metadata={...})
    * @returns The logged event, including the taskId.
    */
   async log({
@@ -213,8 +217,9 @@ class Phospho {
       );
     }
 
+    // If stream=False, log the input and output directly
     if (!stream) {
-      return this._log(
+      return this._log({
         input,
         output,
         sessionId,
@@ -224,15 +229,104 @@ class Phospho {
         inputToStrFunction,
         outputToStrFunction,
         concatenateRawOutputsIfTaskIdExists,
-        true
-        // ...rest,
-      );
-    } else {
-      // TODO !
-      // For the moment raise not implemented error
+        toLog: true, // Always log if stream=False
+        ...rest,
+      });
+    }
+
+    // stream=True. Check if output iterable
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
+    if (!(output[Symbol.asyncIterator] || output[Symbol.iterator])) {
       throw new Error(
-        "phospho.log with stream=True not implemented yet. Please pass stream=False"
+        `Logging output ${JSON.stringify(
+          output
+        )} is not supported with stream=True. Pass an Symbol.asynIterator or Symbol.iterator instead`
       );
+    }
+
+    // Generate a taskId to group logs of the stream
+    const logTaskId = taskId || uuidv4();
+    const phospho = this;
+
+    // Mutate inplace the iterator to log when called
+    // Async case
+    if (output[Symbol.asyncIterator]) {
+      const originalOutput = output[Symbol.asyncIterator];
+      output[Symbol.asyncIterator] = async function* () {
+        const iterator = originalOutput.call(output);
+
+        for await (const value of iterator) {
+          // Log the value
+          phospho._log({
+            input,
+            output: value,
+            sessionId,
+            taskId: logTaskId,
+            rawInput,
+            rawOutput,
+            inputToStrFunction,
+            outputToStrFunction,
+            concatenateRawOutputsIfTaskIdExists,
+            toLog: false, // Don't log if not done
+            ...rest,
+          });
+          yield value;
+        }
+        // Done logging, push the batch
+        phospho._log({
+          input,
+          output: null,
+          sessionId,
+          taskId: logTaskId,
+          rawInput,
+          rawOutput,
+          inputToStrFunction,
+          outputToStrFunction,
+          concatenateRawOutputsIfTaskIdExists,
+          toLog: true, // Log if done
+          ...rest,
+        });
+      };
+    }
+
+    // Sync case
+    if (output[Symbol.iterator]) {
+      const originalOutput = output[Symbol.iterator];
+      output[Symbol.iterator] = function* () {
+        const iterator = originalOutput.call(output);
+
+        for (const value of iterator) {
+          // Log the value
+          phospho._log({
+            input,
+            output: value,
+            sessionId,
+            taskId: logTaskId,
+            rawInput,
+            rawOutput,
+            inputToStrFunction,
+            outputToStrFunction,
+            concatenateRawOutputsIfTaskIdExists,
+            toLog: false, // Don't log if not done
+            ...rest,
+          });
+          yield value;
+        }
+        // Done logging, push the batch
+        phospho._log({
+          input,
+          output: null,
+          sessionId,
+          taskId: logTaskId,
+          rawInput,
+          rawOutput,
+          inputToStrFunction,
+          outputToStrFunction,
+          concatenateRawOutputsIfTaskIdExists,
+          toLog: true, // Log if done
+          ...rest,
+        });
+      };
     }
   }
 
