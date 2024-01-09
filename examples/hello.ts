@@ -89,17 +89,18 @@ const logStream = async () => {
     ],
     stream: true,
   };
-  const stream = await openai.chat.completions.create(query);
-  // const loggedContent = await phospho.log({ input: query, output: result });
+  const streamedResult = await openai.chat.completions.create(query);
 
-  for await (const chunk of stream) {
+  phospho.log({ input: query, output: streamedResult, stream: true });
+
+  for await (const chunk of streamedResult) {
     process.stdout.write(chunk.choices[0]?.delta?.content || "");
   }
 };
 
 // Main function
 (async () => {
-  await simpleLog();
+  // await simpleLog();
   // await extractLog();
-  // await logStream();
+  await logStream();
 })();
