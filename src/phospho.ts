@@ -214,7 +214,7 @@ class Phospho {
     }
 
     if (!stream) {
-      this._log(
+      return this._log(
         input,
         output,
         sessionId,
