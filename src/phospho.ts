@@ -229,6 +229,10 @@ class Phospho {
       );
     } else {
       // TODO !
+      // For the moment raise not implemented error
+      throw new Error(
+        "phospho.log with stream=True not implemented yet. Please pass stream=False"
+      );
     }
   }
 
@@ -273,16 +277,15 @@ class Phospho {
   private debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
 
   wrap = (fn) => {
-    // TODO
     // If Async function, return a wrapped async function
     if (typeof fn === "function") {
       return async (...args) => {
         const result = await fn(...args);
-        const loggedContent = await this.log({
+        this.log({
           input: args,
           output: result,
         });
-        return loggedContent;
+        return result;
       };
     }
   };
