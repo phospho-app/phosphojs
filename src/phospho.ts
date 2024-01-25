@@ -21,17 +21,20 @@ class Phospho {
   latestSessionId: string | null = null;
 
   constructor(context?) {
-    this.init({
-      apiKey: lookupEnvVariable("PHOSPHO_API_KEY"),
-      projectId: lookupEnvVariable("PHOSPHO_PROJECT_ID"),
-    });
-
     this.context = context;
   }
 
   init({ apiKey, projectId, tick }: PhosphoInit = {}) {
-    if (apiKey) this.apiKey = apiKey;
-    if (projectId) this.projectId = projectId;
+    if (apiKey) {
+      this.apiKey = apiKey;
+    } else {
+      this.apiKey = lookupEnvVariable("PHOSPHO_API_KEY");
+    }
+    if (projectId) {
+      this.projectId = projectId;
+    } else {
+      this.projectId = lookupEnvVariable("PHOSPHO_PROJECT_ID");
+    }
     if (tick) this.tick = tick;
   }
 
@@ -359,7 +362,6 @@ class Phospho {
       const data = {
         batched_log_events: batchedLogContent,
       };
-
       const response = await axios.post(url, data, {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
