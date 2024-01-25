@@ -49,113 +49,7 @@ declare class Phospho {
      * Generate a new task id
      */
     newTask(): string;
-    _log(input: any, output: any, sessionId: any, taskId: any, rawInput: any, rawOutput: any, inputToStrFunction: any, outputToStrFunction: any, concatenateRawOutputsIfTaskIdExists: any, toLog: any, ...rest: any[]): Promise<{
-        length: number;
-        toString(): string;
-        toLocaleString(): string;
-        pop(): any;
-        push(...items: any[]): number;
-        concat(...items: ConcatArray<any>[]): any[];
-        concat(...items: any[]): any[];
-        join(separator?: string): string;
-        reverse(): any[];
-        shift(): any;
-        slice(start?: number, end?: number): any[];
-        sort(compareFn?: (a: any, b: any) => number): any[];
-        splice(start: number, deleteCount?: number): any[];
-        splice(start: number, deleteCount: number, ...items: any[]): any[];
-        unshift(...items: any[]): number;
-        indexOf(searchElement: any, fromIndex?: number): number;
-        lastIndexOf(searchElement: any, fromIndex?: number): number;
-        every<S extends any>(predicate: (value: any, index: number, array: any[]) => value is S, thisArg?: any): this is S[];
-        every(predicate: (value: any, index: number, array: any[]) => unknown, thisArg?: any): boolean;
-        some(predicate: (value: any, index: number, array: any[]) => unknown, thisArg?: any): boolean;
-        forEach(callbackfn: (value: any, index: number, array: any[]) => void, thisArg?: any): void;
-        map<U>(callbackfn: (value: any, index: number, array: any[]) => U, thisArg?: any): U[];
-        filter<S_1 extends any>(predicate: (value: any, index: number, array: any[]) => value is S_1, thisArg?: any): S_1[];
-        filter(predicate: (value: any, index: number, array: any[]) => unknown, thisArg?: any): any[];
-        reduce(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any): any;
-        reduce(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any, initialValue: any): any;
-        reduce<U_1>(callbackfn: (previousValue: U_1, currentValue: any, currentIndex: number, array: any[]) => U_1, initialValue: U_1): U_1;
-        reduceRight(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any): any;
-        reduceRight(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any, initialValue: any): any;
-        reduceRight<U_2>(callbackfn: (previousValue: U_2, currentValue: any, currentIndex: number, array: any[]) => U_2, initialValue: U_2): U_2;
-        find<S_2 extends any>(predicate: (value: any, index: number, obj: any[]) => value is S_2, thisArg?: any): S_2;
-        find(predicate: (value: any, index: number, obj: any[]) => unknown, thisArg?: any): any;
-        findIndex(predicate: (value: any, index: number, obj: any[]) => unknown, thisArg?: any): number;
-        fill(value: any, start?: number, end?: number): any[];
-        copyWithin(target: number, start: number, end?: number): any[];
-        entries(): IterableIterator<[number, any]>;
-        keys(): IterableIterator<number>;
-        values(): IterableIterator<any>;
-        includes(searchElement: any, fromIndex?: number): boolean;
-        flatMap<U_3, This = undefined>(callback: (this: This, value: any, index: number, array: any[]) => U_3 | readonly U_3[], thisArg?: This): U_3[];
-        flat<A, D extends number = 1>(this: A, depth?: D): FlatArray<A, D>[];
-        at(index: number): any;
-        findLast<S_3 extends any>(predicate: (value: any, index: number, array: any[]) => value is S_3, thisArg?: any): S_3;
-        findLast(predicate: (value: any, index: number, array: any[]) => unknown, thisArg?: any): any;
-        findLastIndex(predicate: (value: any, index: number, array: any[]) => unknown, thisArg?: any): number;
-        toReversed(): any[];
-        toSorted(compareFn?: (a: any, b: any) => number): any[];
-        toSpliced(start: number, deleteCount: number, ...items: any[]): any[];
-        toSpliced(start: number, deleteCount?: number): any[];
-        with(index: number, value: any): any[];
-        [Symbol.iterator](): IterableIterator<any>;
-        [Symbol.unscopables]: {
-            [x: number]: boolean;
-            length?: boolean;
-            toString?: boolean;
-            toLocaleString?: boolean;
-            pop?: boolean;
-            push?: boolean;
-            concat?: boolean;
-            join?: boolean;
-            reverse?: boolean;
-            shift?: boolean;
-            slice?: boolean;
-            sort?: boolean;
-            splice?: boolean;
-            unshift?: boolean;
-            indexOf?: boolean;
-            lastIndexOf?: boolean;
-            every?: boolean;
-            some?: boolean;
-            forEach?: boolean;
-            map?: boolean;
-            filter?: boolean;
-            reduce?: boolean;
-            reduceRight?: boolean;
-            find?: boolean;
-            findIndex?: boolean;
-            fill?: boolean;
-            copyWithin?: boolean;
-            entries?: boolean;
-            keys?: boolean;
-            values?: boolean;
-            includes?: boolean;
-            flatMap?: boolean;
-            flat?: boolean;
-            at?: boolean;
-            findLast?: boolean;
-            findLastIndex?: boolean;
-            toReversed?: boolean;
-            toSorted?: boolean;
-            toSpliced?: boolean;
-            with?: boolean;
-            [Symbol.iterator]?: boolean;
-            readonly [Symbol.unscopables]?: boolean;
-        };
-        client_created_at: number;
-        project_id: string;
-        session_id: any;
-        task_id: any;
-        input: string;
-        raw_input: string | object;
-        raw_input_type_name: "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
-        output: string;
-        raw_output: string | object;
-        raw_output_type_name: "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
-    }>;
+    private _log;
     /**
      * Phospho's main all-purpose logging endpoint, with support for streaming.
   
@@ -192,16 +86,27 @@ declare class Phospho {
      * @param outputToTaskIdAndToLogFunction A function to convert the output to a task id and a boolean indicating whether to log the output. Useful for streaming.
      * @param concatenateRawOutputsIfTaskIdExists Whether to concatenate the raw outputs if a task id exists
      * @param stream Enable compatibility with streaming input
-     * @param rest Any other data to log
+     * @param rest Any other data to log as keyword arguments (ex: flag: "success", metadata: {...})
      * @returns The logged event, including the taskId.
      */
-    log({ input, output, sessionId, taskId, rawInput, rawOutput, inputToStrFunction, outputToStrFunction, concatenateRawOutputsIfTaskIdExists, stream, ...rest }: LogContent): Promise<void>;
+    log({ input, output, sessionId, taskId, rawInput, rawOutput, inputToStrFunction, outputToStrFunction, concatenateRawOutputsIfTaskIdExists, stream, ...rest }: LogContent): Promise<{
+        client_created_at: number;
+        project_id: string;
+        session_id: any;
+        task_id: any;
+        input: string;
+        raw_input: string | object;
+        raw_input_type_name: "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
+        output: string;
+        raw_output: string | object;
+        raw_output_type_name: "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
+    }>;
     /**
      * Send a batch of log events to Phospho
      */
     sendBatch(): Promise<void>;
     private debouncedProcessQueue;
-    wrap: (fn: any) => (...args: any[]) => Promise<void>;
+    wrap: (fn: any) => (...args: any[]) => Promise<any>;
     /**
      * Flag a task already logged to phospho as a `success` or a `failure`. This is useful to collect human feedback.
      *

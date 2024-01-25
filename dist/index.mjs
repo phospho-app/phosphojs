@@ -2,6 +2,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __knownSymbol = (name, symbol) => {
+  return (symbol = Symbol[name]) ? symbol : Symbol.for("Symbol." + name);
+};
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
@@ -15,13 +18,6 @@ var __spreadValues = (a, b) => {
   return a;
 };
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined")
-    return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
 var __objRest = (source, exclude) => {
   var target = {};
   for (var prop in source)
@@ -54,6 +50,24 @@ var __async = (__this, __arguments, generator) => {
     step((generator = generator.apply(__this, __arguments)).next());
   });
 };
+var __await = function(promise, isYieldStar) {
+  this[0] = promise;
+  this[1] = isYieldStar;
+};
+var __asyncGenerator = (__this, __arguments, generator) => {
+  var resume = (k, v, yes, no) => {
+    try {
+      var x = generator[k](v), isAwait = (v = x.value) instanceof __await, done = x.done;
+      Promise.resolve(isAwait ? v[0] : v).then((y) => isAwait ? resume(k === "return" ? k : "next", v[1] ? { done: y.done, value: y.value } : y, yes, no) : yes({ value: y, done })).catch((e) => resume("throw", e, yes, no));
+    } catch (e) {
+      no(e);
+    }
+  };
+  var method = (k) => it[k] = (x) => new Promise((yes, no) => resume(k, x, yes, no));
+  var it = {};
+  return generator = generator.apply(__this, __arguments), it[__knownSymbol("asyncIterator")] = () => it, method("next"), method("throw"), method("return"), it;
+};
+var __forAwait = (obj, it, method) => (it = obj[__knownSymbol("asyncIterator")]) ? it.call(obj) : (obj = obj[__knownSymbol("iterator")](), it = {}, method = (key, fn) => (fn = obj[key]) && (it[key] = (arg) => new Promise((yes, no, done) => (arg = fn.call(obj, arg), done = arg.done, Promise.resolve(arg.value).then((value) => yes({ value, done }), no)))), method("next"), method("return"), it);
 
 // src/context.ts
 import { createContext } from "unctx";
@@ -68,6 +82,7 @@ var context_default = {
 
 // src/phospho.ts
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 // src/utils.ts
 var lookupEnvVariable = /* @__PURE__ */ __name((variable) => {
@@ -114,12 +129,18 @@ var detectStrFromOutput = /* @__PURE__ */ __name((output) => {
     return output;
   }
   if (typeof output === "object") {
-    const outputFromOpenAInoStream = (_b = (_a = output == null ? void 0 : output.choices[0]) == null ? void 0 : _a.message) == null ? void 0 : _b.content;
-    if (outputFromOpenAInoStream)
-      return outputFromOpenAInoStream;
-    const outputFromOpenAIStream = (_d = (_c = output == null ? void 0 : output.choices[0]) == null ? void 0 : _c.delta) == null ? void 0 : _d.content;
-    if (outputFromOpenAIStream)
-      return outputFromOpenAIStream;
+    const choiceMessageContent = (_b = (_a = output == null ? void 0 : output.choices[0]) == null ? void 0 : _a.message) == null ? void 0 : _b.content;
+    if (choiceMessageContent !== void 0)
+      return choiceMessageContent;
+    const choiceDelta = (_c = output == null ? void 0 : output.choices[0]) == null ? void 0 : _c.delta;
+    if (choiceDelta !== void 0) {
+      const choiceDeltaContent = choiceDelta == null ? void 0 : choiceDelta.content;
+      if (choiceDeltaContent !== void 0)
+        return choiceDeltaContent;
+      const choiceFinishReason = (_d = output == null ? void 0 : output.choices[0]) == null ? void 0 : _d.finish_reason;
+      if (choiceFinishReason !== void 0)
+        return "";
+    }
     return JSON.stringify(output);
   }
   return output.toString();
@@ -169,9 +190,8 @@ var getInputOutput = /* @__PURE__ */ __name(({
 }, "getInputOutput");
 
 // src/phospho.ts
-var { v4: uuidv4 } = __require("uuid");
 var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
-var DEFAULT_API_VERSION = "/v0";
+var DEFAULT_API_VERSION = "/v2";
 var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
 var _Phospho = class _Phospho {
   constructor(context) {
@@ -186,11 +206,11 @@ var _Phospho = class _Phospho {
       if (typeof fn === "function") {
         return (...args) => __async(this, null, function* () {
           const result = yield fn(...args);
-          const loggedContent = yield this.log({
+          this.log({
             input: args,
             output: result
           });
-          return loggedContent;
+          return result;
         });
       }
     }, "wrap");
@@ -252,17 +272,19 @@ var _Phospho = class _Phospho {
       });
       return updatedTask;
     }, "userFeedback");
-    this.init({
-      apiKey: lookupEnvVariable("PHOSPHO_API_KEY"),
-      projectId: lookupEnvVariable("PHOSPHO_PROJECT_ID")
-    });
     this.context = context;
   }
   init({ apiKey, projectId, tick } = {}) {
-    if (apiKey)
+    if (apiKey) {
       this.apiKey = apiKey;
-    if (projectId)
+    } else {
+      this.apiKey = lookupEnvVariable("PHOSPHO_API_KEY");
+    }
+    if (projectId) {
       this.projectId = projectId;
+    } else {
+      this.projectId = lookupEnvVariable("PHOSPHO_PROJECT_ID");
+    }
     if (tick)
       this.tick = tick;
   }
@@ -280,8 +302,31 @@ var _Phospho = class _Phospho {
     this.latestTaskId = uuidv4();
     return this.latestTaskId;
   }
-  _log(input, output, sessionId, taskId, rawInput, rawOutput, inputToStrFunction, outputToStrFunction, concatenateRawOutputsIfTaskIdExists, toLog, ...rest) {
+  _log(_a) {
     return __async(this, null, function* () {
+      var _b = _a, {
+        input,
+        output,
+        sessionId,
+        taskId,
+        rawInput,
+        rawOutput,
+        inputToStrFunction,
+        outputToStrFunction,
+        concatenateRawOutputsIfTaskIdExists,
+        toLog
+      } = _b, rest = __objRest(_b, [
+        "input",
+        "output",
+        "sessionId",
+        "taskId",
+        "rawInput",
+        "rawOutput",
+        "inputToStrFunction",
+        "outputToStrFunction",
+        "concatenateRawOutputsIfTaskIdExists",
+        "toLog"
+      ]);
       if (input instanceof Promise) {
         input = yield input;
       }
@@ -323,7 +368,11 @@ var _Phospho = class _Phospho {
         let newRawOutput = logContent.raw_output;
         if (typeof existingLogEvent.content.output === "string" && typeof logContent.output === "string") {
           newOutput = existingLogEvent.content.output + logContent.output;
+        } else if (logContent.output === null) {
+          newOutput = existingLogEvent.content.output.toString();
         }
+        if (concatenateRawOutputsIfTaskIdExists === void 0)
+          concatenateRawOutputsIfTaskIdExists = true;
         if (concatenateRawOutputsIfTaskIdExists) {
           if (Array.isArray(existingLogEvent.content.raw_output)) {
             newRawOutput = [
@@ -337,6 +386,8 @@ var _Phospho = class _Phospho {
             ];
           }
         }
+        logContent.output = newOutput;
+        logContent.raw_output = newRawOutput;
       }
       this.logQueue.set(taskId, { id: taskId, content: logContent, toLog });
       this.debouncedProcessQueue();
@@ -379,12 +430,12 @@ var _Phospho = class _Phospho {
      * @param outputToTaskIdAndToLogFunction A function to convert the output to a task id and a boolean indicating whether to log the output. Useful for streaming.
      * @param concatenateRawOutputsIfTaskIdExists Whether to concatenate the raw outputs if a task id exists
      * @param stream Enable compatibility with streaming input
-     * @param rest Any other data to log
+     * @param rest Any other data to log as keyword arguments (ex: flag: "success", metadata: {...})
      * @returns The logged event, including the taskId.
      */
-  log(_a) {
+  log(_c) {
     return __async(this, null, function* () {
-      var _b = _a, {
+      var _d = _c, {
         input,
         output,
         sessionId,
@@ -395,7 +446,7 @@ var _Phospho = class _Phospho {
         outputToStrFunction,
         concatenateRawOutputsIfTaskIdExists,
         stream
-      } = _b, rest = __objRest(_b, [
+      } = _d, rest = __objRest(_d, [
         "input",
         "output",
         "sessionId",
@@ -418,7 +469,7 @@ var _Phospho = class _Phospho {
         );
       }
       if (!stream) {
-        this._log(
+        return this._log(__spreadValues({
           input,
           output,
           sessionId,
@@ -428,10 +479,97 @@ var _Phospho = class _Phospho {
           inputToStrFunction,
           outputToStrFunction,
           concatenateRawOutputsIfTaskIdExists,
-          true
-          // ...rest,
+          toLog: true
+        }, rest));
+      }
+      if (!(output[Symbol.asyncIterator] || output[Symbol.iterator])) {
+        throw new Error(
+          `Logging output ${JSON.stringify(
+            output
+          )} is not supported with stream=True. Pass an Symbol.asynIterator or Symbol.iterator instead`
         );
-      } else {
+      }
+      const logTaskId = taskId || uuidv4();
+      const phospho2 = this;
+      if (output[Symbol.asyncIterator]) {
+        const originalOutput = output[Symbol.asyncIterator];
+        output[Symbol.asyncIterator] = function() {
+          return __asyncGenerator(this, null, function* () {
+            const iterator = originalOutput.call(output);
+            try {
+              for (var iter = __forAwait(iterator), more, temp, error; more = !(temp = yield new __await(iter.next())).done; more = false) {
+                const value = temp.value;
+                phospho2._log(__spreadValues({
+                  input,
+                  output: value,
+                  sessionId,
+                  taskId: logTaskId,
+                  rawInput,
+                  rawOutput,
+                  inputToStrFunction,
+                  outputToStrFunction,
+                  concatenateRawOutputsIfTaskIdExists,
+                  toLog: false
+                }, rest));
+                yield value;
+              }
+            } catch (temp) {
+              error = [temp];
+            } finally {
+              try {
+                more && (temp = iter.return) && (yield new __await(temp.call(iter)));
+              } finally {
+                if (error)
+                  throw error[0];
+              }
+            }
+            phospho2._log(__spreadValues({
+              input,
+              output: null,
+              sessionId,
+              taskId: logTaskId,
+              rawInput,
+              rawOutput,
+              inputToStrFunction,
+              outputToStrFunction,
+              concatenateRawOutputsIfTaskIdExists,
+              toLog: true
+            }, rest));
+          });
+        };
+      }
+      if (output[Symbol.iterator]) {
+        const originalOutput = output[Symbol.iterator];
+        output[Symbol.iterator] = function* () {
+          const iterator = originalOutput.call(output);
+          for (const value of iterator) {
+            phospho2._log(__spreadValues({
+              input,
+              output: value,
+              sessionId,
+              taskId: logTaskId,
+              rawInput,
+              rawOutput,
+              inputToStrFunction,
+              outputToStrFunction,
+              concatenateRawOutputsIfTaskIdExists,
+              toLog: false
+            }, rest));
+            yield value;
+          }
+          phospho2._log(__spreadValues({
+            input,
+            output: null,
+            sessionId,
+            taskId: logTaskId,
+            rawInput,
+            rawOutput,
+            inputToStrFunction,
+            outputToStrFunction,
+            concatenateRawOutputsIfTaskIdExists,
+            toLog: true
+          }, rest));
+        };
       }
     });
   }
