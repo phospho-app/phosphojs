@@ -5,10 +5,7 @@ import OpenAI from "openai";
 import "dotenv/config";
 
 // Initialize Phospho
-phospho.init({
-  apiKey: process.env.PHOSPHO_API_KEY,
-  projectId: process.env.PHOSPHO_PROJECT_ID,
-});
+phospho.init();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
