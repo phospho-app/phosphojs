@@ -16,6 +16,8 @@ npm run examples
 
 ## Publishing the package
 
+Follow the versioning rules of npm: https://docs.npmjs.com/about-semantic-versioning
+
 ```
 npm run build
 npm login
