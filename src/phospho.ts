@@ -1,6 +1,5 @@
 import axios from "axios";
-const { v4: uuidv4 } = require("uuid");
-
+import { v4 as uuidv4 } from "uuid";
 import { debounce, lookupEnvVariable } from "./utils";
 import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput } from "./extractor";
