@@ -19,7 +19,7 @@ You need to have a Phospho account to use this library. If you don't have one, y
 ### Quickstart
 
 ```javascript
-import { phospho } from "phospho";
+import phospho from "phospho";
 
 phospho.init({
   apiKey: "...", // Get your API key on phospho.ai
@@ -32,6 +32,8 @@ phospho
   .then((response) => console.log("Log successful:", response))
   .catch((error) => console.error("Error:", error));
 ```
+
+You only need to do `phospho.init()` once in your app, then you can reuse it accross you whole codebase.
 
 ## More Information
 

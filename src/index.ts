@@ -3,4 +3,3 @@ import Phospho from "./phospho";
 
 const phospho = new Phospho(ctx);
 export default phospho;
-export { phospho };
