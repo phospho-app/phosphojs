@@ -19,7 +19,7 @@ You need to have a Phospho account to use this library. If you don't have one, y
 ### Quickstart
 
 ```javascript
-import { phospho } from "phospho";
+import phospho from "phospho";
 
 phospho.init({
   apiKey: "...", // Get your API key on phospho.ai
