@@ -33,6 +33,8 @@ phospho
   .catch((error) => console.error("Error:", error));
 ```
 
+You only need to do `phospho.init()` once in your app, then you can reuse it accross you whole codebase.
+
 ## More Information
 
 For more information, please visit the documentation at [docs.phospho.ai](https://docs.phospho.ai)

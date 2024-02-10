@@ -28,6 +28,7 @@ export interface LogEvent {
 }
 
 export interface UserFeedback {
+  projectId: string;
   taskId: string;
   flag?: "success" | "failure";
   notes?: string;

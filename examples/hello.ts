@@ -1,6 +1,6 @@
 // OpenAI Chat Example
 
-import phospho from "../src";
+import { phospho, sendUserFeedback } from "../src";
 import OpenAI from "openai";
 import "dotenv/config";
 
@@ -90,13 +90,28 @@ const logStream = async () => {
 
   // Log the streamed result by passing stream: true in phospho.log
   // phospho combines the streamed outputs with simple heuristics
-  phospho.log({ input: query, output: streamedResult, stream: true });
+  phospho.log({
+    input: query,
+    output: streamedResult,
+    stream: true,
+  });
 
   for await (const chunk of streamedResult) {
     // As you iterate through the stream, each chunk is logged to phospho
     process.stdout.write(chunk.choices[0]?.delta?.content || "");
   }
+
   console.log(""); // New line
+  // Send feedback to Phospho
+  // wait 1s to make sure the streamed result is logged to Phospho
+  await new Promise((resolve) => setTimeout(resolve, 3000)).then(() =>
+    sendUserFeedback({
+      projectId: process.env.PHOSPHO_PROJECT_ID,
+      taskId: phospho.latestTaskId,
+      flag: "success",
+      notes: "The streamed result was logged successfully",
+    })
+  );
 };
 
 // Main function

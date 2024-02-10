@@ -3,25 +3,23 @@ import { v4 as uuidv4 } from "uuid";
 import { debounce, lookupEnvVariable } from "./utils";
 import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput } from "./extractor";
-
-const DEFAULT_API_BASE_URL = "https://api.phospho.ai";
-const DEFAULT_API_VERSION = "/v2";
-const BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
+import { BASE_URL } from "./config";
+import { sendUserFeedback } from "./user-feedback";
 
 class Phospho {
   apiKey: string;
   projectId: string;
   tick: number = 500;
-  context: any;
+  // context: any;
 
   // Queue of log events as a Mapping of {taskId: logEvent}
   logQueue = new Map<string, LogEvent>();
   latestTaskId: string | null = null;
   latestSessionId: string | null = null;
 
-  constructor(context?) {
-    this.context = context;
-  }
+  // constructor(context?) {
+  //   this.context = context;
+  // }
 
   init({ apiKey, projectId, tick }: PhosphoInit = {}) {
     if (apiKey) {
@@ -412,50 +410,17 @@ class Phospho {
     rawFlag,
     rawFlagToFlag,
   }: UserFeedback) => {
-    if (!flag) {
-      if (!rawFlag) {
-        // Raise warning
-        console.warn(
-          "Either flag or raw_flag must be specified when calling user_feedback. Nothing logged"
-        );
-        return;
-      } else {
-        if (!rawFlagToFlag) {
-          // Default rawFlagToFlag function
-          rawFlagToFlag = (rawFlag: string) => {
-            if (["success", "👍", "🙂", "😀"].includes(rawFlag)) {
-              return "success";
-            } else {
-              return "failure";
-            }
-          };
-        }
-        // Convert rawFlag to flag
-        flag = rawFlagToFlag(rawFlag);
-      }
-    }
-
-    const updatedTask = axios
-      .post(
-        `${BASE_URL}/task/${taskId}`,
-        {
-          flag: flag,
-          notes: notes,
-          source: source,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .then((response) => {
-        return response.data;
-      });
-
-    return updatedTask;
+    return sendUserFeedback({
+      projectId: this.projectId,
+      taskId,
+      flag,
+      notes,
+      source,
+      rawFlag,
+      rawFlagToFlag,
+    });
   };
 }
 
 export default Phospho;
+export { Phospho };

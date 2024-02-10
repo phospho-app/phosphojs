@@ -69,19 +69,56 @@ var __asyncGenerator = (__this, __arguments, generator) => {
 };
 var __forAwait = (obj, it, method) => (it = obj[__knownSymbol("asyncIterator")]) ? it.call(obj) : (obj = obj[__knownSymbol("iterator")](), it = {}, method = (key, fn) => (fn = obj[key]) && (it[key] = (arg) => new Promise((yes, no, done) => (arg = fn.call(obj, arg), done = arg.done, Promise.resolve(arg.value).then((value) => yes({ value, done }), no)))), method("next"), method("return"), it);
 
-// src/context.ts
-var _unctx = require('unctx');
-var _async_hooks = require('async_hooks');
-var user = _unctx.createContext.call(void 0, {
-  asyncContext: true,
-  AsyncLocalStorage: _async_hooks.AsyncLocalStorage
-});
-var context_default = {
-  user
-};
+// src/user-feedback.ts
+var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+
+// src/config.ts
+var DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+var DEFAULT_API_VERSION = "/v2";
+var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
+
+// src/user-feedback.ts
+var sendUserFeedback = /* @__PURE__ */ __name(({
+  projectId,
+  taskId,
+  flag,
+  notes,
+  source,
+  rawFlag,
+  rawFlagToFlag
+}) => {
+  if (!flag) {
+    if (!rawFlag) {
+      console.warn(
+        "Either flag or raw_flag must be specified when calling user_feedback. Nothing logged"
+      );
+      return;
+    } else {
+      if (!rawFlagToFlag) {
+        rawFlagToFlag = /* @__PURE__ */ __name((rawFlag2) => {
+          if (["success", "\u{1F44D}", "\u{1F642}", "\u{1F600}"].includes(rawFlag2)) {
+            return "success";
+          } else {
+            return "failure";
+          }
+        }, "rawFlagToFlag");
+      }
+      flag = rawFlagToFlag(rawFlag);
+    }
+  }
+  const updatedTask = _axios2.default.post(`${BASE_URL}/task/${taskId}/flag`, {
+    flag,
+    notes,
+    source,
+    project_id: projectId
+  }).then((response) => {
+    return response.data;
+  });
+  return updatedTask;
+}, "sendUserFeedback");
 
 // src/phospho.ts
-var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+
 var _uuid = require('uuid');
 
 // src/utils.ts
@@ -190,12 +227,10 @@ var getInputOutput = /* @__PURE__ */ __name(({
 }, "getInputOutput");
 
 // src/phospho.ts
-var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
-var DEFAULT_API_VERSION = "/v2";
-var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
 var _Phospho = class _Phospho {
-  constructor(context) {
+  constructor() {
     this.tick = 500;
+    // context: any;
     // Queue of log events as a Mapping of {taskId: logEvent}
     this.logQueue = /* @__PURE__ */ new Map();
     this.latestTaskId = null;
@@ -235,45 +270,20 @@ var _Phospho = class _Phospho {
       rawFlag,
       rawFlagToFlag
     }) => {
-      if (!flag) {
-        if (!rawFlag) {
-          console.warn(
-            "Either flag or raw_flag must be specified when calling user_feedback. Nothing logged"
-          );
-          return;
-        } else {
-          if (!rawFlagToFlag) {
-            rawFlagToFlag = /* @__PURE__ */ __name((rawFlag2) => {
-              if (["success", "\u{1F44D}", "\u{1F642}", "\u{1F600}"].includes(rawFlag2)) {
-                return "success";
-              } else {
-                return "failure";
-              }
-            }, "rawFlagToFlag");
-          }
-          flag = rawFlagToFlag(rawFlag);
-        }
-      }
-      const updatedTask = _axios2.default.post(
-        `${BASE_URL}/task/${taskId}`,
-        {
-          flag,
-          notes,
-          source
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json"
-          }
-        }
-      ).then((response) => {
-        return response.data;
+      return sendUserFeedback({
+        projectId: this.projectId,
+        taskId,
+        flag,
+        notes,
+        source,
+        rawFlag,
+        rawFlagToFlag
       });
-      return updatedTask;
     }, "userFeedback");
-    this.context = context;
   }
+  // constructor(context?) {
+  //   this.context = context;
+  // }
   init({ apiKey, projectId, tick } = {}) {
     if (apiKey) {
       this.apiKey = apiKey;
@@ -612,10 +622,10 @@ var Phospho = _Phospho;
 var phospho_default = Phospho;
 
 // src/index.ts
-var phospho = new phospho_default(context_default);
+var phospho = new phospho_default();
 var src_default = phospho;
 
 
-exports.default = src_default;
 
-module.exports = exports.default;
+
+exports.default = src_default; exports.phospho = phospho; exports.sendUserFeedback = sendUserFeedback;
