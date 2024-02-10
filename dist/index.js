@@ -73,12 +73,12 @@ var __forAwait = (obj, it, method) => (it = obj[__knownSymbol("asyncIterator")])
 var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 
 // src/config.ts
-var DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
 var DEFAULT_API_VERSION = "/v2";
 var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
 
 // src/user-feedback.ts
-var sendUserFeedback = /* @__PURE__ */ __name(({
+var sendUserFeedback = /* @__PURE__ */ __name((_0) => __async(void 0, [_0], function* ({
   projectId,
   taskId,
   flag,
@@ -86,7 +86,7 @@ var sendUserFeedback = /* @__PURE__ */ __name(({
   source,
   rawFlag,
   rawFlagToFlag
-}) => {
+}) {
   if (!flag) {
     if (!rawFlag) {
       console.warn(
@@ -106,7 +106,7 @@ var sendUserFeedback = /* @__PURE__ */ __name(({
       flag = rawFlagToFlag(rawFlag);
     }
   }
-  const updatedTask = _axios2.default.post(`${BASE_URL}/task/${taskId}/flag`, {
+  const updatedTask = yield _axios2.default.post(`${BASE_URL}/tasks/${taskId}/flag`, {
     flag,
     notes,
     source,
@@ -115,7 +115,7 @@ var sendUserFeedback = /* @__PURE__ */ __name(({
     return response.data;
   });
   return updatedTask;
-}, "sendUserFeedback");
+}), "sendUserFeedback");
 
 // src/phospho.ts
 
