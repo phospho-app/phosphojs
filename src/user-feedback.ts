@@ -17,7 +17,7 @@ import { BASE_URL } from "./config";
  * @param rawFlagToFlag Optional function to convert rawFlag to flag. By default, "success", "👍", "🙂", "😀" are set to be "success"
  * @returns The updated task
  */
-const sendUserFeedback = ({
+const sendUserFeedback = async ({
   projectId,
   taskId,
   flag,
@@ -49,7 +49,7 @@ const sendUserFeedback = ({
     }
   }
 
-  const updatedTask = axios
+  const updatedTask = await axios
     .post(`${BASE_URL}/tasks/${taskId}/flag`, {
       flag: flag,
       notes: notes,
