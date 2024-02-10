@@ -23,6 +23,7 @@ interface LogEvent {
     toLog: boolean;
 }
 interface UserFeedback {
+    projectId: string;
     taskId: string;
     flag?: "success" | "failure";
     notes?: string;
@@ -31,15 +32,29 @@ interface UserFeedback {
     rawFlagToFlag?: (rawFlag: string) => "success" | "failure";
 }
 
+/**
+ * Flag a task already logged to phospho as a `success` or a `failure`. This is useful to collect human feedback.
+ *
+ * Note: Feedback can be directly logged with `phospho.log` by passing `flag` as a keyword argument.
+ *
+ * @param projectId The project id. Get it from the phospho dashboard.
+ * @param taskId The task id. Get the taskId from the returned value of phospho.log, use phospho.newTask to generate a new task id, or use pospho.latestTaskId
+ * @param flag The flag to set, either `success` or `failure`
+ * @param notes Optional notes to add to the task. For example, the reason for the flag.
+ * @param source Optional source of the flag. For example, the name of the user who flagged the task.
+ * @param rawFlag Optional raw flag. If flag is not specified, rawFlag is used to determine the flag. For example, if rawFlag is "👍", then flag is "success".
+ * @param rawFlagToFlag Optional function to convert rawFlag to flag. By default, "success", "👍", "🙂", "😀" are set to be "success"
+ * @returns The updated task
+ */
+declare const sendUserFeedback: ({ projectId, taskId, flag, notes, source, rawFlag, rawFlagToFlag, }: UserFeedback) => Promise<any>;
+
 declare class Phospho {
     apiKey: string;
     projectId: string;
     tick: number;
-    context: any;
     logQueue: Map<string, LogEvent>;
     latestTaskId: string | null;
     latestSessionId: string | null;
-    constructor(context?: any);
     init({ apiKey, projectId, tick }?: PhosphoInit): void;
     /**
      * Generate a new session id
@@ -125,4 +140,4 @@ declare class Phospho {
 
 declare const phospho: Phospho;
 
-export { phospho as default };
+export { phospho as default, phospho, sendUserFeedback };
