@@ -50,7 +50,7 @@ const sendUserFeedback = ({
   }
 
   const updatedTask = axios
-    .post(`${BASE_URL}/task/${taskId}/flag`, {
+    .post(`${BASE_URL}/tasks/${taskId}/flag`, {
       flag: flag,
       notes: notes,
       source: source,
