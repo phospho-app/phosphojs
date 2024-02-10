@@ -1,6 +1,6 @@
 {
   "name": "phospho",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Phospho, the LLM analytics platform",
   "main": "./dist/index.d.ts",
   "exports": {
