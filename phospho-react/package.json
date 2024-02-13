@@ -30,8 +30,7 @@
   },
   "homepage": "https://github.com/phospho-app/phosphojs/phospho-react#readme",
   "dependencies": {
-    "axios": "^1.6.2",
-    "uuid": "^9.0.1"
+    "phospho": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.7",
@@ -40,5 +39,9 @@
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
   }
 }
