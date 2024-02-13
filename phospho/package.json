@@ -23,12 +23,12 @@
     "ai",
     "analytics"
   ],
-  "author": "phospho team contact@phospho.app (https://phospho.app)",
+  "author": "phospho team contact@phospho.app (https://phospho.ai)",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/phospho-app/phosphojs/issues"
   },
-  "homepage": "https://github.com/phospho-app/phosphojs#readme",
+  "homepage": "https://github.com/phospho-app/phosphojs/phospho#readme",
   "dependencies": {
     "axios": "^1.6.2",
     "uuid": "^9.0.1"

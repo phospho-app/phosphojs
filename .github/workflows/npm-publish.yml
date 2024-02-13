@@ -1,7 +1,7 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
 
-name: Node.js Package
+name: Publish Node.js Packages
 
 on:
   release:
@@ -19,9 +19,12 @@ jobs:
   #       # TODO : Add tests
   #       # - run: npm test
 
-  publish-npm:
+  publish-phospho-npm:
     # needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phospho
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

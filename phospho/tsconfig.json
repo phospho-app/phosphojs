@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "ES2015",
+    "types": ["node"],
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "strict": false, // TODO: strict: true
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["./src/*"]
+}

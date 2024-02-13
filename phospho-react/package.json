@@ -1,0 +1,44 @@
+{
+  "name": "phospho-react",
+  "version": "0.0.1",
+  "description": "Phospho, React components to record user feedback",
+  "main": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "examples": "tsx ./examples/hello.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phospho-app/phosphojs.git"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "analytics"
+  ],
+  "author": "phospho team contact@phospho.app (https://phospho.ai)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/phospho-app/phosphojs/issues"
+  },
+  "homepage": "https://github.com/phospho-app/phosphojs/phospho-react#readme",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.7",
+    "dotenv": "^16.3.1",
+    "langchain": "^0.1.1",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
