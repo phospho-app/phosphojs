@@ -22,9 +22,6 @@ jobs:
   publish-phospho-npm:
     # needs: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: phospho
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

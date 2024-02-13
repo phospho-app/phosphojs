@@ -1,5 +1,0 @@
-examples/
-src/
-.env
-.gitignore
-tsup.config.ts
