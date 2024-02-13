@@ -85,8 +85,18 @@ var sendUserFeedback = /* @__PURE__ */ __name((_0) => __async(void 0, [_0], func
   notes,
   source,
   rawFlag,
-  rawFlagToFlag
+  rawFlagToFlag,
+  baseUrl
 }) {
+  if (!projectId) {
+    console.warn(
+      "projectId must be specified when calling user_feedback. Nothing logged"
+    );
+    return;
+  }
+  if (!baseUrl) {
+    baseUrl = BASE_URL;
+  }
   if (!flag) {
     if (!rawFlag) {
       console.warn(
@@ -230,6 +240,7 @@ var getInputOutput = /* @__PURE__ */ __name(({
 var _Phospho = class _Phospho {
   constructor() {
     this.tick = 500;
+    this.baseUrl = BASE_URL;
     // context: any;
     // Queue of log events as a Mapping of {taskId: logEvent}
     this.logQueue = /* @__PURE__ */ new Map();
@@ -277,14 +288,15 @@ var _Phospho = class _Phospho {
         notes,
         source,
         rawFlag,
-        rawFlagToFlag
+        rawFlagToFlag,
+        baseUrl: this.baseUrl
       });
     }, "userFeedback");
   }
   // constructor(context?) {
   //   this.context = context;
   // }
-  init({ apiKey, projectId, tick } = {}) {
+  init({ apiKey, projectId, tick, baseUrl } = {}) {
     if (apiKey) {
       this.apiKey = apiKey;
     } else {
@@ -297,6 +309,8 @@ var _Phospho = class _Phospho {
     }
     if (tick)
       this.tick = tick;
+    if (baseUrl)
+      this.baseUrl = baseUrl;
   }
   /**
    * Generate a new session id
@@ -600,7 +614,7 @@ var _Phospho = class _Phospho {
         const batchedLogContent = batchedLogEvents.map(
           (logEvent) => logEvent.content
         );
-        const url = `${BASE_URL}/log/${this.projectId}`;
+        const url = `${this.baseUrl}/log/${this.projectId}`;
         const data = {
           batched_log_events: batchedLogContent
         };

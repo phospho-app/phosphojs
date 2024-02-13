@@ -2,6 +2,7 @@ interface PhosphoInit {
     apiKey?: string;
     projectId?: string;
     tick?: number;
+    baseUrl?: string;
 }
 interface LogContent {
     input: string | Promise<string> | object | null;
@@ -30,6 +31,7 @@ interface UserFeedback {
     source?: string;
     rawFlag?: string;
     rawFlagToFlag?: (rawFlag: string) => "success" | "failure";
+    baseUrl?: string;
 }
 
 /**
@@ -44,18 +46,20 @@ interface UserFeedback {
  * @param source Optional source of the flag. For example, the name of the user who flagged the task.
  * @param rawFlag Optional raw flag. If flag is not specified, rawFlag is used to determine the flag. For example, if rawFlag is "👍", then flag is "success".
  * @param rawFlagToFlag Optional function to convert rawFlag to flag. By default, "success", "👍", "🙂", "😀" are set to be "success"
+ * @param baseUrl Optional base url for the phospho server. By default, it is set to the phospho server.
  * @returns The updated task
  */
-declare const sendUserFeedback: ({ projectId, taskId, flag, notes, source, rawFlag, rawFlagToFlag, }: UserFeedback) => Promise<any>;
+declare const sendUserFeedback: ({ projectId, taskId, flag, notes, source, rawFlag, rawFlagToFlag, baseUrl, }: UserFeedback) => Promise<any>;
 
 declare class Phospho {
     apiKey: string;
     projectId: string;
     tick: number;
+    baseUrl: string;
     logQueue: Map<string, LogEvent>;
     latestTaskId: string | null;
     latestSessionId: string | null;
-    init({ apiKey, projectId, tick }?: PhosphoInit): void;
+    init({ apiKey, projectId, tick, baseUrl }?: PhosphoInit): void;
     /**
      * Generate a new session id
      */
