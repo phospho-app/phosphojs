@@ -15,6 +15,7 @@ import { BASE_URL } from "./config";
  * @param source Optional source of the flag. For example, the name of the user who flagged the task.
  * @param rawFlag Optional raw flag. If flag is not specified, rawFlag is used to determine the flag. For example, if rawFlag is "👍", then flag is "success".
  * @param rawFlagToFlag Optional function to convert rawFlag to flag. By default, "success", "👍", "🙂", "😀" are set to be "success"
+ * @param baseUrl Optional base url for the phospho server. By default, it is set to the phospho server.
  * @returns The updated task
  */
 const sendUserFeedback = async ({
@@ -25,7 +26,19 @@ const sendUserFeedback = async ({
   source,
   rawFlag,
   rawFlagToFlag,
+  baseUrl,
 }: UserFeedback) => {
+  if (!projectId) {
+    // Raise warning
+    console.warn(
+      "projectId must be specified when calling user_feedback. Nothing logged"
+    );
+    return;
+  }
+  if (!baseUrl) {
+    baseUrl = BASE_URL;
+  }
+
   if (!flag) {
     if (!rawFlag) {
       // Raise warning

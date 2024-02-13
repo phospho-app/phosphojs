@@ -2,6 +2,7 @@ export interface PhosphoInit {
   apiKey?: string;
   projectId?: string;
   tick?: number;
+  baseUrl?: string;
 }
 
 export interface LogContent {
@@ -35,4 +36,5 @@ export interface UserFeedback {
   source?: string;
   rawFlag?: string;
   rawFlagToFlag?: (rawFlag: string) => "success" | "failure";
+  baseUrl?: string;
 }

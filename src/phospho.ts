@@ -10,6 +10,7 @@ class Phospho {
   apiKey: string;
   projectId: string;
   tick: number = 500;
+  baseUrl: string = BASE_URL;
   // context: any;
 
   // Queue of log events as a Mapping of {taskId: logEvent}
@@ -21,7 +22,7 @@ class Phospho {
   //   this.context = context;
   // }
 
-  init({ apiKey, projectId, tick }: PhosphoInit = {}) {
+  init({ apiKey, projectId, tick, baseUrl }: PhosphoInit = {}) {
     if (apiKey) {
       this.apiKey = apiKey;
     } else {
@@ -33,6 +34,7 @@ class Phospho {
       this.projectId = lookupEnvVariable("PHOSPHO_PROJECT_ID");
     }
     if (tick) this.tick = tick;
+    if (baseUrl) this.baseUrl = baseUrl;
   }
 
   /**
@@ -355,7 +357,7 @@ class Phospho {
         (logEvent) => logEvent.content
       );
 
-      const url = `${BASE_URL}/log/${this.projectId}`;
+      const url = `${this.baseUrl}/log/${this.projectId}`;
       const data = {
         batched_log_events: batchedLogContent,
       };
@@ -418,6 +420,7 @@ class Phospho {
       source,
       rawFlag,
       rawFlagToFlag,
+      baseUrl: this.baseUrl,
     });
   };
 }
