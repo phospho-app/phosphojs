@@ -620,9 +620,13 @@ var _Phospho = class _Phospho {
         };
         const response = yield axios2.post(url, data, {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey} `,
             "Content-Type": "application/json"
           }
+        }).then((response2) => {
+          batchedLogEvents.forEach((logEvent) => {
+            this.logQueue.delete(logEvent.id);
+          });
         });
         return;
       } catch (error) {

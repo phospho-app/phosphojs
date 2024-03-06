@@ -361,12 +361,19 @@ class Phospho {
       const data = {
         batched_log_events: batchedLogContent,
       };
-      const response = await axios.post(url, data, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios
+        .post(url, data, {
+          headers: {
+            Authorization: `Bearer ${this.apiKey} `,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          // Clear the log queue from the log events where toLog is true
+          batchedLogEvents.forEach((logEvent) => {
+            this.logQueue.delete(logEvent.id);
+          });
+        });
 
       return;
     } catch (error) {
