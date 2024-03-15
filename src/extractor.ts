@@ -51,10 +51,10 @@ interface GetInputOutputResult {
 const detectUsageFromInputOutput = (input, output) => {
   if (typeof output === "object") {
     // OpenAI-like API return the usage in the output
-    if (output.usage) {
+    if (output?.usage) {
       return output.usage;
     }
-    if (output.object === "chat.completion.chunk") {
+    if (output?.chat?.completion?.chunk) {
       // When streaming, we generate token by token
       return { completion_tokens: 1 };
     }
@@ -66,16 +66,16 @@ const detectSystemPromptFromInputOutput = (input, output) => {
   if (typeof input === "object") {
     // OpenAI API has a messages list and the first message is the system prompt
     // if the 'role' is 'system'
-    if (input.messages) {
+    if (input?.messages) {
       const messages = input.messages;
       if (Array.isArray(messages) && messages.length > 0) {
-        if (messages[0].role === "system") {
-          return messages[0].content;
+        if (messages[0]?.role === "system") {
+          return messages[0]?.content;
         }
       }
     }
     // Claude-like API
-    if (input.system) {
+    if (input?.system) {
       return input.system;
     }
   }
@@ -85,12 +85,12 @@ const detectSystemPromptFromInputOutput = (input, output) => {
 const detectModelFromInputOutput = (input, output) => {
   if (typeof output === "object") {
     // OpenAI-like API return the model in the output
-    if (output.model) {
+    if (output?.model) {
       return output.model;
     }
   }
   if (typeof input === "object") {
-    if (input.model) {
+    if (input?.model) {
       return input.model;
     }
   }
