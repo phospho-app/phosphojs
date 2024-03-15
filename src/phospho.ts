@@ -371,7 +371,7 @@ class Phospho {
       const response = await axios
         .post(url, data, {
           headers: {
-            Authorization: `Bearer ${this.apiKey} `,
+            Authorization: `Bearer ${this.apiKey}`,
             "Content-Type": "application/json",
           },
         })
