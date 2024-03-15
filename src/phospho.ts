@@ -2,7 +2,7 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { debounce, lookupEnvVariable } from "./utils";
 import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
-import { getInputOutput } from "./extractor";
+import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
 import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
 
@@ -82,6 +82,12 @@ class Phospho {
       inputToStrFunction,
       outputToStrFunction,
     });
+    const metadataToLog = extractMetadataFromInputOutput({
+      input,
+      output,
+      // TODO : Add support for custom functions
+      inputOutputToUsageFunction: null,
+    });
 
     // Generate a taskId if not specified
     taskId = taskId || uuidv4();
@@ -107,6 +113,7 @@ class Phospho {
       raw_output: extractedInputOutputToLog.rawOutputToLog,
       raw_output_type_name: typeof extractedInputOutputToLog.rawOutputToLog,
       // Other
+      ...metadataToLog,
       ...rest,
     };
 
