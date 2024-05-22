@@ -1,6 +1,6 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OpenAIInstrumentation } from '@arizeai/openinference-instrumentation-openai'
+import { OpenAIInstrumentation } from '@traceloop/instrumentation-openai';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -12,7 +12,7 @@ const provider = new NodeTracerProvider(
 
 registerInstrumentations({ 
   instrumentations: [
-    new OpenAIInstrumentation()
+    new OpenAIInstrumentation(),
   ],
  });
 
@@ -25,7 +25,7 @@ registerInstrumentations({
   }
 
  const traceExporter = new OTLPTraceExporter({ 
-    url: `${BASE_URL}/log/${process.env.PHOSPHO_PROJECT_ID}/opentelemetry`, 
+    url: `${BASE_URL}/log/${process.env.PHOSPHO_PROJECT_ID}/opentelemetry`,
     headers: { Authorization: `Bearer ${process.env.PHOSPHO_API_KEY}`, 'Content-Type': 'application/json' }
   });
  provider.addSpanProcessor(new SimpleSpanProcessor(traceExporter));

@@ -30,15 +30,16 @@
   },
   "homepage": "https://github.com/phospho-app/phosphojs#readme",
   "dependencies": {
-    "@arizeai/openinference-instrumentation-openai": "^0.2.0",
     "@opentelemetry/api": "^1.8.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.51.1",
     "@opentelemetry/instrumentation": "^0.51.1",
     "@opentelemetry/sdk-node": "^0.51.1",
     "@opentelemetry/sdk-trace-base": "^1.24.1",
     "@opentelemetry/sdk-trace-node": "^1.24.1",
+    "@traceloop/instrumentation-openai": "^0.8.2",
     "axios": "^1.6.2",
-    "openai": "^4.47.1"
+    "openai": "^4.47.1",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.7",
