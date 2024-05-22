@@ -1,5 +1,5 @@
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { debounce, lookupEnvVariable } from "./utils";
 import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
@@ -41,7 +41,7 @@ class Phospho {
    * Generate a new session id
    */
   newSession() {
-    this.latestSessionId = uuidv4();
+    this.latestSessionId = randomUUID();
     return this.latestSessionId;
   }
 
@@ -49,7 +49,7 @@ class Phospho {
    * Generate a new task id
    */
   newTask() {
-    this.latestTaskId = uuidv4();
+    this.latestTaskId = randomUUID();
     return this.latestTaskId;
   }
 
@@ -90,7 +90,7 @@ class Phospho {
     });
 
     // Generate a taskId if not specified
-    taskId = taskId || uuidv4();
+    taskId = taskId || randomUUID();
     if (!sessionId) sessionId = null;
 
     // Keep track of taskId and sessionId
@@ -260,7 +260,7 @@ class Phospho {
     }
 
     // Generate a taskId to group logs of the stream
-    const logTaskId = taskId || uuidv4();
+    const logTaskId = taskId || randomUUID();
     const phospho = this;
 
     // Mutate inplace the iterator to log when called
