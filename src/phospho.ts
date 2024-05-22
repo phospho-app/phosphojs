@@ -5,6 +5,7 @@ import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
 import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
+import "./instrumentation";
 
 class Phospho {
   apiKey: string;
@@ -268,13 +269,16 @@ class Phospho {
     if (output[Symbol.asyncIterator]) {
       const originalOutput = output[Symbol.asyncIterator];
       output[Symbol.asyncIterator] = async function* () {
-        const iterator = originalOutput.call(output);
+      const iterator = originalOutput.call(output);
 
-        for await (const value of iterator) {
-          // Log the value
+      // TODO: Improve this syntax
+      while (true) {
+        const { done, value } = await iterator.next();
+        if (done) {
+          // Done logging, push the batch
           phospho._log({
             input,
-            output: value,
+            output: null,
             sessionId,
             taskId: logTaskId,
             rawInput,
@@ -282,15 +286,15 @@ class Phospho {
             inputToStrFunction,
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
-            toLog: false, // Don't log if not done
+            toLog: true, // Log if done
             ...rest,
           });
-          yield value;
-        }
-        // Done logging, push the batch
-        phospho._log({
+          break;
+          }
+          // Log the value
+          phospho._log({
           input,
-          output: null,
+          output: value,
           sessionId,
           taskId: logTaskId,
           rawInput,
@@ -298,9 +302,11 @@ class Phospho {
           inputToStrFunction,
           outputToStrFunction,
           concatenateRawOutputsIfTaskIdExists,
-          toLog: true, // Log if done
+          toLog: false, // Don't log if not done
           ...rest,
-        });
+          });
+        yield value;
+      }
       };
     }
 

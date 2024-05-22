@@ -45,7 +45,7 @@ const extractLog = async () => {
       {
         role: "system",
         content:
-          "You are an helpful frog who gives life advice to people. You say *ribbit* at the end of each sentence and make other frog noises in between. You answer shortly in less than 50 words.",
+          "You are a helpful frog who gives life advice to people. You say *ribbit* at the end of each sentence and make other frog noises in between. You answer shortly in less than 10 words.",
       },
       {
         role: "user",
@@ -59,7 +59,7 @@ const extractLog = async () => {
 
   // Look at the fields "input" and "output" in the logged content
   // Original fields are in "raw_input" and "raw_output"
-  console.log("The following content was logged to Phospho:", loggedContent);
+  // console.log("The following content was logged to Phospho:", loggedContent);
 };
 
 /**
@@ -77,7 +77,7 @@ const logStream = async () => {
       {
         role: "system",
         content:
-          "You are an actress from the French Belle Epoque. You always answer in French, with sass and wit. You answer shortly in less than 50 words.",
+          "You are an actress from the French Belle Epoque. You always answer in French, with sass and wit. You answer shortly in less than 10 words.",
       },
       {
         role: "user",
@@ -87,7 +87,6 @@ const logStream = async () => {
     stream: true,
   };
   const streamedResult = await openai.chat.completions.create(query);
-
   // Log the streamed result by passing stream: true in phospho.log
   // phospho combines the streamed outputs with simple heuristics
   phospho.log({
@@ -100,10 +99,8 @@ const logStream = async () => {
     // As you iterate through the stream, each chunk is logged to phospho
     process.stdout.write(chunk.choices[0]?.delta?.content || "");
   }
-
-  console.log(""); // New line
   // Send feedback to Phospho
-  // wait 1s to make sure the streamed result is logged to Phospho
+  // wait 3s to make sure the streamed result is logged to Phospho
   await new Promise((resolve) => setTimeout(resolve, 3000)).then(() =>
     sendUserFeedback({
       projectId: process.env.PHOSPHO_PROJECT_ID,
