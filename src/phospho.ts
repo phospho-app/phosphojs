@@ -5,7 +5,6 @@ import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
 import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
-import "./instrumentation";
 
 class Phospho {
   apiKey: string;

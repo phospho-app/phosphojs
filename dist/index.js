@@ -1,14 +1,8 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var __defProp = Object.defineProperty;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __knownSymbol = (name, symbol) => {
-  return (symbol = Symbol[name]) ? symbol : Symbol.for("Symbol." + name);
-};
+var __knownSymbol = (name, symbol) => (symbol = Symbol[name]) ? symbol : Symbol.for("Symbol." + name);
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
@@ -22,13 +16,6 @@ var __spreadValues = (a, b) => {
   return a;
 };
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined")
-    return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
 var __objRest = (source, exclude) => {
   var target = {};
   for (var prop in source)
@@ -41,28 +28,6 @@ var __objRest = (source, exclude) => {
     }
   return target;
 };
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-};
-var __commonJS = (cb, mod) => function __require2() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
     var fulfilled = (value) => {
@@ -95,383 +60,19 @@ var __asyncGenerator = (__this, __arguments, generator) => {
     } catch (e) {
       no(e);
     }
-  };
-  var method = (k) => it[k] = (x) => new Promise((yes, no) => resume(k, x, yes, no));
-  var it = {};
+  }, method = (k) => it[k] = (x) => new Promise((yes, no) => resume(k, x, yes, no)), it = {};
   return generator = generator.apply(__this, __arguments), it[__knownSymbol("asyncIterator")] = () => it, method("next"), method("throw"), method("return"), it;
 };
 
+// src/user-feedback.ts
+var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+
 // src/config.ts
-var DEFAULT_API_BASE_URL, DEFAULT_API_VERSION, BASE_URL;
-var init_config = __esm({
-  "src/config.ts"() {
-    DEFAULT_API_BASE_URL = "https://api.phospho.ai";
-    DEFAULT_API_VERSION = "/v2";
-    BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
-  }
-});
-
-// node_modules/dotenv/package.json
-var require_package = __commonJS({
-  "node_modules/dotenv/package.json"(exports, module) {
-    module.exports = {
-      name: "dotenv",
-      version: "16.3.1",
-      description: "Loads environment variables from .env file",
-      main: "lib/main.js",
-      types: "lib/main.d.ts",
-      exports: {
-        ".": {
-          types: "./lib/main.d.ts",
-          require: "./lib/main.js",
-          default: "./lib/main.js"
-        },
-        "./config": "./config.js",
-        "./config.js": "./config.js",
-        "./lib/env-options": "./lib/env-options.js",
-        "./lib/env-options.js": "./lib/env-options.js",
-        "./lib/cli-options": "./lib/cli-options.js",
-        "./lib/cli-options.js": "./lib/cli-options.js",
-        "./package.json": "./package.json"
-      },
-      scripts: {
-        "dts-check": "tsc --project tests/types/tsconfig.json",
-        lint: "standard",
-        "lint-readme": "standard-markdown",
-        pretest: "npm run lint && npm run dts-check",
-        test: "tap tests/*.js --100 -Rspec",
-        prerelease: "npm test",
-        release: "standard-version"
-      },
-      repository: {
-        type: "git",
-        url: "git://github.com/motdotla/dotenv.git"
-      },
-      funding: "https://github.com/motdotla/dotenv?sponsor=1",
-      keywords: [
-        "dotenv",
-        "env",
-        ".env",
-        "environment",
-        "variables",
-        "config",
-        "settings"
-      ],
-      readmeFilename: "README.md",
-      license: "BSD-2-Clause",
-      devDependencies: {
-        "@definitelytyped/dtslint": "^0.0.133",
-        "@types/node": "^18.11.3",
-        decache: "^4.6.1",
-        sinon: "^14.0.1",
-        standard: "^17.0.0",
-        "standard-markdown": "^7.1.0",
-        "standard-version": "^9.5.0",
-        tap: "^16.3.0",
-        tar: "^6.1.11",
-        typescript: "^4.8.4"
-      },
-      engines: {
-        node: ">=12"
-      },
-      browser: {
-        fs: false
-      }
-    };
-  }
-});
-
-// node_modules/dotenv/lib/main.js
-var require_main = __commonJS({
-  "node_modules/dotenv/lib/main.js"(exports, module) {
-    var fs = __require("fs");
-    var path = __require("path");
-    var os = __require("os");
-    var crypto = __require("crypto");
-    var packageJson = require_package();
-    var version = packageJson.version;
-    var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
-    function parse(src) {
-      const obj = {};
-      let lines = src.toString();
-      lines = lines.replace(/\r\n?/mg, "\n");
-      let match;
-      while ((match = LINE.exec(lines)) != null) {
-        const key = match[1];
-        let value = match[2] || "";
-        value = value.trim();
-        const maybeQuote = value[0];
-        value = value.replace(/^(['"`])([\s\S]*)\1$/mg, "$2");
-        if (maybeQuote === '"') {
-          value = value.replace(/\\n/g, "\n");
-          value = value.replace(/\\r/g, "\r");
-        }
-        obj[key] = value;
-      }
-      return obj;
-    }
-    __name(parse, "parse");
-    function _parseVault(options) {
-      const vaultPath = _vaultPath(options);
-      const result = DotenvModule.configDotenv({ path: vaultPath });
-      if (!result.parsed) {
-        throw new Error(`MISSING_DATA: Cannot parse ${vaultPath} for an unknown reason`);
-      }
-      const keys = _dotenvKey(options).split(",");
-      const length = keys.length;
-      let decrypted;
-      for (let i = 0; i < length; i++) {
-        try {
-          const key = keys[i].trim();
-          const attrs = _instructions(result, key);
-          decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
-          break;
-        } catch (error) {
-          if (i + 1 >= length) {
-            throw error;
-          }
-        }
-      }
-      return DotenvModule.parse(decrypted);
-    }
-    __name(_parseVault, "_parseVault");
-    function _log(message) {
-      console.log(`[dotenv@${version}][INFO] ${message}`);
-    }
-    __name(_log, "_log");
-    function _warn(message) {
-      console.log(`[dotenv@${version}][WARN] ${message}`);
-    }
-    __name(_warn, "_warn");
-    function _debug(message) {
-      console.log(`[dotenv@${version}][DEBUG] ${message}`);
-    }
-    __name(_debug, "_debug");
-    function _dotenvKey(options) {
-      if (options && options.DOTENV_KEY && options.DOTENV_KEY.length > 0) {
-        return options.DOTENV_KEY;
-      }
-      if (process.env.DOTENV_KEY && process.env.DOTENV_KEY.length > 0) {
-        return process.env.DOTENV_KEY;
-      }
-      return "";
-    }
-    __name(_dotenvKey, "_dotenvKey");
-    function _instructions(result, dotenvKey) {
-      let uri;
-      try {
-        uri = new URL(dotenvKey);
-      } catch (error) {
-        if (error.code === "ERR_INVALID_URL") {
-          throw new Error("INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenv.org/vault/.env.vault?environment=development");
-        }
-        throw error;
-      }
-      const key = uri.password;
-      if (!key) {
-        throw new Error("INVALID_DOTENV_KEY: Missing key part");
-      }
-      const environment = uri.searchParams.get("environment");
-      if (!environment) {
-        throw new Error("INVALID_DOTENV_KEY: Missing environment part");
-      }
-      const environmentKey = `DOTENV_VAULT_${environment.toUpperCase()}`;
-      const ciphertext = result.parsed[environmentKey];
-      if (!ciphertext) {
-        throw new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${environmentKey} in your .env.vault file.`);
-      }
-      return { ciphertext, key };
-    }
-    __name(_instructions, "_instructions");
-    function _vaultPath(options) {
-      let dotenvPath = path.resolve(process.cwd(), ".env");
-      if (options && options.path && options.path.length > 0) {
-        dotenvPath = options.path;
-      }
-      return dotenvPath.endsWith(".vault") ? dotenvPath : `${dotenvPath}.vault`;
-    }
-    __name(_vaultPath, "_vaultPath");
-    function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path.join(os.homedir(), envPath.slice(1)) : envPath;
-    }
-    __name(_resolveHome, "_resolveHome");
-    function _configVault(options) {
-      _log("Loading env from encrypted .env.vault");
-      const parsed = DotenvModule._parseVault(options);
-      let processEnv = process.env;
-      if (options && options.processEnv != null) {
-        processEnv = options.processEnv;
-      }
-      DotenvModule.populate(processEnv, parsed, options);
-      return { parsed };
-    }
-    __name(_configVault, "_configVault");
-    function configDotenv(options) {
-      let dotenvPath = path.resolve(process.cwd(), ".env");
-      let encoding = "utf8";
-      const debug = Boolean(options && options.debug);
-      if (options) {
-        if (options.path != null) {
-          dotenvPath = _resolveHome(options.path);
-        }
-        if (options.encoding != null) {
-          encoding = options.encoding;
-        }
-      }
-      try {
-        const parsed = DotenvModule.parse(fs.readFileSync(dotenvPath, { encoding }));
-        let processEnv = process.env;
-        if (options && options.processEnv != null) {
-          processEnv = options.processEnv;
-        }
-        DotenvModule.populate(processEnv, parsed, options);
-        return { parsed };
-      } catch (e) {
-        if (debug) {
-          _debug(`Failed to load ${dotenvPath} ${e.message}`);
-        }
-        return { error: e };
-      }
-    }
-    __name(configDotenv, "configDotenv");
-    function config(options) {
-      const vaultPath = _vaultPath(options);
-      if (_dotenvKey(options).length === 0) {
-        return DotenvModule.configDotenv(options);
-      }
-      if (!fs.existsSync(vaultPath)) {
-        _warn(`You set DOTENV_KEY but you are missing a .env.vault file at ${vaultPath}. Did you forget to build it?`);
-        return DotenvModule.configDotenv(options);
-      }
-      return DotenvModule._configVault(options);
-    }
-    __name(config, "config");
-    function decrypt(encrypted, keyStr) {
-      const key = Buffer.from(keyStr.slice(-64), "hex");
-      let ciphertext = Buffer.from(encrypted, "base64");
-      const nonce = ciphertext.slice(0, 12);
-      const authTag = ciphertext.slice(-16);
-      ciphertext = ciphertext.slice(12, -16);
-      try {
-        const aesgcm = crypto.createDecipheriv("aes-256-gcm", key, nonce);
-        aesgcm.setAuthTag(authTag);
-        return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
-      } catch (error) {
-        const isRange = error instanceof RangeError;
-        const invalidKeyLength = error.message === "Invalid key length";
-        const decryptionFailed = error.message === "Unsupported state or unable to authenticate data";
-        if (isRange || invalidKeyLength) {
-          const msg = "INVALID_DOTENV_KEY: It must be 64 characters long (or more)";
-          throw new Error(msg);
-        } else if (decryptionFailed) {
-          const msg = "DECRYPTION_FAILED: Please check your DOTENV_KEY";
-          throw new Error(msg);
-        } else {
-          console.error("Error: ", error.code);
-          console.error("Error: ", error.message);
-          throw error;
-        }
-      }
-    }
-    __name(decrypt, "decrypt");
-    function populate(processEnv, parsed, options = {}) {
-      const debug = Boolean(options && options.debug);
-      const override = Boolean(options && options.override);
-      if (typeof parsed !== "object") {
-        throw new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
-      }
-      for (const key of Object.keys(parsed)) {
-        if (Object.prototype.hasOwnProperty.call(processEnv, key)) {
-          if (override === true) {
-            processEnv[key] = parsed[key];
-          }
-          if (debug) {
-            if (override === true) {
-              _debug(`"${key}" is already defined and WAS overwritten`);
-            } else {
-              _debug(`"${key}" is already defined and was NOT overwritten`);
-            }
-          }
-        } else {
-          processEnv[key] = parsed[key];
-        }
-      }
-    }
-    __name(populate, "populate");
-    var DotenvModule = {
-      configDotenv,
-      _configVault,
-      _parseVault,
-      config,
-      decrypt,
-      parse,
-      populate
-    };
-    module.exports.configDotenv = DotenvModule.configDotenv;
-    module.exports._configVault = DotenvModule._configVault;
-    module.exports._parseVault = DotenvModule._parseVault;
-    module.exports.config = DotenvModule.config;
-    module.exports.decrypt = DotenvModule.decrypt;
-    module.exports.parse = DotenvModule.parse;
-    module.exports.populate = DotenvModule.populate;
-    module.exports = DotenvModule;
-  }
-});
-
-// src/instrumentation.ts
-var _sdknode = require('@opentelemetry/sdk-node');
-var _exportertraceotlphttp = require('@opentelemetry/exporter-trace-otlp-http');
-var _instrumentationopenai = require('@traceloop/instrumentation-openai');
-var _sdktracenode = require('@opentelemetry/sdk-trace-node');
-var _instrumentation = require('@opentelemetry/instrumentation');
-var _sdktracebase = require('@opentelemetry/sdk-trace-base');
-var require_instrumentation = __commonJS({
-  "src/instrumentation.ts"(exports) {
-    init_config();
-    require_main().config();
-    var provider = new (0, _sdktracenode.NodeTracerProvider)();
-    _instrumentation.registerInstrumentations.call(void 0, {
-      instrumentations: [
-        new (0, _instrumentationopenai.OpenAIInstrumentation)()
-      ]
-    });
-    if (!process.env.PHOSPHO_PROJECT_ID) {
-      throw new Error("PHOSPHO_PROJECT_ID environment variable is not set");
-    }
-    if (!process.env.PHOSPHO_API_KEY) {
-      throw new Error("PHOSPHO_API_KEY environment variable is not set");
-    }
-    var traceExporter = new (0, _exportertraceotlphttp.OTLPTraceExporter)({
-      url: `${BASE_URL}/log/${process.env.PHOSPHO_PROJECT_ID}/opentelemetry`,
-      headers: { Authorization: `Bearer ${process.env.PHOSPHO_API_KEY}`, "Content-Type": "application/json" }
-    });
-    provider.addSpanProcessor(new (0, _sdktracebase.SimpleSpanProcessor)(traceExporter));
-    provider.register();
-    var sdk = new (0, _sdknode.NodeSDK)({ traceExporter });
-    (() => __async(exports, null, function* () {
-      try {
-        yield sdk.start();
-        console.log("Phospho initialised...");
-      } catch (error) {
-        console.error(error);
-      }
-    }))();
-    process.on("SIGINT", () => __async(exports, null, function* () {
-      try {
-        yield sdk.shutdown();
-        console.log("Phospho disconnected.");
-      } catch (error) {
-        console.error(error);
-      } finally {
-        process.exit(0);
-      }
-    }));
-  }
-});
+var DEFAULT_API_BASE_URL = "https://api.phospho.ai";
+var DEFAULT_API_VERSION = "/v2";
+var BASE_URL = DEFAULT_API_BASE_URL + DEFAULT_API_VERSION;
 
 // src/user-feedback.ts
-init_config();
-var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var sendUserFeedback = /* @__PURE__ */ __name((_0) => __async(void 0, [_0], function* ({
   projectId,
   taskId,
@@ -571,16 +172,13 @@ var detectStrFromOutput = /* @__PURE__ */ __name((output) => {
   }
   if (typeof output === "object") {
     const choiceMessageContent = (_b = (_a = output == null ? void 0 : output.choices[0]) == null ? void 0 : _a.message) == null ? void 0 : _b.content;
-    if (choiceMessageContent !== void 0)
-      return choiceMessageContent;
+    if (choiceMessageContent !== void 0) return choiceMessageContent;
     const choiceDelta = (_c = output == null ? void 0 : output.choices[0]) == null ? void 0 : _c.delta;
     if (choiceDelta !== void 0) {
       const choiceDeltaContent = choiceDelta == null ? void 0 : choiceDelta.content;
-      if (choiceDeltaContent !== void 0)
-        return choiceDeltaContent;
+      if (choiceDeltaContent !== void 0) return choiceDeltaContent;
       const choiceFinishReason = (_d = output == null ? void 0 : output.choices[0]) == null ? void 0 : _d.finish_reason;
-      if (choiceFinishReason !== void 0)
-        return "";
+      if (choiceFinishReason !== void 0) return "";
     }
     return JSON.stringify(output);
   }
@@ -694,8 +292,6 @@ var extractMetadataFromInputOutput = /* @__PURE__ */ __name(({
 }, "extractMetadataFromInputOutput");
 
 // src/phospho.ts
-init_config();
-var import_instrumentation2 = __toESM(require_instrumentation());
 var _Phospho = class _Phospho {
   constructor() {
     this.tick = 500;
@@ -766,10 +362,8 @@ var _Phospho = class _Phospho {
     } else {
       this.projectId = lookupEnvVariable("PHOSPHO_PROJECT_ID");
     }
-    if (tick)
-      this.tick = tick;
-    if (baseUrl)
-      this.baseUrl = baseUrl;
+    if (tick) this.tick = tick;
+    if (baseUrl) this.baseUrl = baseUrl;
   }
   /**
    * Generate a new session id
@@ -831,8 +425,7 @@ var _Phospho = class _Phospho {
         inputOutputToUsageFunction: null
       });
       taskId = taskId || _crypto.randomUUID.call(void 0, );
-      if (!sessionId)
-        sessionId = null;
+      if (!sessionId) sessionId = null;
       this.latestSessionId = sessionId;
       this.latestTaskId = taskId;
       const logContent = __spreadValues(__spreadValues({
