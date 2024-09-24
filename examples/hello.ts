@@ -38,7 +38,7 @@ const extractLog = async () => {
   // If you pass full OpenAI queries and results to Phospho, it will extract the input and output for you.
   const question = "What's the capital of Fashion ?";
   const query = {
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0,
     seed: 123,
     messages: [
@@ -70,7 +70,7 @@ const logStream = async () => {
   // This should also work with streaming
   const question = "What's the capital of Fashion ?";
   const query = {
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0,
     seed: 123,
     messages: [
@@ -100,8 +100,8 @@ const logStream = async () => {
     process.stdout.write(chunk.choices[0]?.delta?.content || "");
   }
   // Send feedback to Phospho
-  // wait 3s to make sure the streamed result is logged to Phospho
-  await new Promise((resolve) => setTimeout(resolve, 3000)).then(() =>
+  // wait 10s to make sure the streamed result is logged to Phospho
+  await new Promise((resolve) => setTimeout(resolve, 10000)).then(() =>
     sendUserFeedback({
       projectId: process.env.PHOSPHO_PROJECT_ID,
       taskId: phospho.latestTaskId,
