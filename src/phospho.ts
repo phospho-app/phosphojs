@@ -59,14 +59,20 @@ class Phospho {
   /**
    * Initialize the Phospho instance
    *
-   * Basic usage: phospho.init({apiKey: "...", projectId: "..."})
+   * Basic usage:
+   *
+   * phospho.init({apiKey: "...", projectId: "..."})
+   *
+   * or
+   *
+   * phospho.init() // Will look for PHOSPHO_API_KEY and PHOSPHO_PROJECT_ID in the environment variables
    *
    * @param {PhosphoInit} options - The initialization options
    * @param {string} [options.apiKey] - The API key
    * @param {string} [options.projectId] - The project ID
-   * @param {number} [options.tick] - The tick value for debounced operations
-   * @param {string} [options.baseUrl] - The base URL for API requests
-   * @param {string} [options.path_to_hash] - The path to hash for version identification
+   * @param {number} [options.tick] - The tick value for debounced operations, no need to change unless you know what you're doing
+   * @param {string} [options.baseUrl] - The base URL for API requests, defaults to the Phospho API
+   * @param {string} [options.path_to_hash] - The path to hash for version identification, defaults to the current working directory
    * @returns {Promise<void>}
    */
   async init({
