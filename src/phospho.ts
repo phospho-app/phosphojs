@@ -31,10 +31,13 @@ class Phospho {
    */
   baseUrl: string = BASE_URL;
   /**
-   * @property {string} path_to_hash - The path to your codebase to hash for versioning
-   * @example "process.cwd()"
+   * @property {string} pathToH
+  ash - The path to your codebase to hash for versioning
+   * @default process.cwd()
+   * @usecase phospho.init({pathToHash: "src"}) // Mark versions with a hash of the src directory
+   * @usecase phospho.init({pathToHash: null}) // Disable auto-versioning
    */
-  path_to_hash: string | null = null;
+  pathToHash: string | string[] | null = process.cwd();
 
   // Queue of log events as a Mapping of {taskId: logEvent}
   /**
@@ -54,7 +57,7 @@ class Phospho {
   /**
    * @property {Promise<string> | string | null} version_id - The version id of your app, to be used for versioning
    */
-  version_id: Promise<string> | string | null = null;
+  versionId: Promise<string> | string | null = null;
 
   /**
    * Initialize the Phospho instance
@@ -72,7 +75,7 @@ class Phospho {
    * @param {string} [options.projectId] - The project ID
    * @param {number} [options.tick] - The tick value for debounced operations, no need to change unless you know what you're doing
    * @param {string} [options.baseUrl] - The base URL for API requests, defaults to the Phospho API
-   * @param {string} [options.path_to_hash] - The path to hash for version identification, defaults to the current working directory
+   * @param {string | string[] | null} [options.pathToHash] - Defaults to the current working directory, will tag incoming logs with the hash of your codebase for auto-versioning, set to null to disable
    * @returns {Promise<void>}
    */
   async init({
@@ -80,7 +83,7 @@ class Phospho {
     projectId,
     tick,
     baseUrl,
-    path_to_hash,
+    pathToHash,
   }: PhosphoInit = {}): Promise<void> {
     if (apiKey) {
       this.apiKey = apiKey;
@@ -94,11 +97,8 @@ class Phospho {
     }
     if (tick) this.tick = tick;
     if (baseUrl) this.baseUrl = baseUrl;
-    if (path_to_hash) {
-      this.version_id = hashCode(path_to_hash);
-    } else {
-      path_to_hash = process.cwd();
-      this.version_id = hashCode(path_to_hash);
+    if (pathToHash) {
+      this.versionId = hashCode(pathToHash);
     }
   }
 
@@ -139,7 +139,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     toLog,
-    version_id,
+    versionId,
     ...rest
   }) {
     // If input or output are async, await them
@@ -174,13 +174,13 @@ class Phospho {
     this.latestTaskId = taskId;
 
     // Handle version_id
-    if (this.version_id instanceof Promise) {
-      version_id = await this.version_id;
+    if (this.versionId instanceof Promise) {
+      versionId = await this.versionId;
     } else if (
-      typeof version_id !== "string" &&
-      typeof this.version_id === "string"
+      typeof versionId !== "string" &&
+      typeof this.versionId === "string"
     ) {
-      version_id = this.version_id;
+      versionId = this.versionId;
     }
 
     const logContent = {
@@ -190,7 +190,7 @@ class Phospho {
       project_id: this.projectId,
       session_id: sessionId,
       task_id: taskId,
-      version_id: version_id,
+      version_id: versionId,
       // Input
       input: extractedInputOutputToLog.inputToLog,
       raw_input: extractedInputOutputToLog.rawInputToLog,
@@ -305,7 +305,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     stream,
-    version_id,
+    versionId,
     ...rest
   }: LogContent) {
     // Verify if phospho.init has been called
@@ -333,7 +333,7 @@ class Phospho {
         outputToStrFunction,
         concatenateRawOutputsIfTaskIdExists,
         toLog: true, // Always log if stream=False
-        version_id,
+        versionId,
         ...rest,
       });
     }
@@ -375,7 +375,7 @@ class Phospho {
               outputToStrFunction,
               concatenateRawOutputsIfTaskIdExists,
               toLog: true, // Log if done
-              version_id,
+              versionId,
               ...rest,
             });
             break;
@@ -392,7 +392,7 @@ class Phospho {
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
             toLog: false, // Don't log if not done
-            version_id,
+            versionId,
             ...rest,
           });
           yield value;
@@ -419,7 +419,7 @@ class Phospho {
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
             toLog: false, // Don't log if not done
-            version_id,
+            versionId,
             ...rest,
           });
           yield value;
@@ -436,7 +436,7 @@ class Phospho {
           outputToStrFunction,
           concatenateRawOutputsIfTaskIdExists,
           toLog: true, // Log if done
-          version_id,
+          versionId,
           ...rest,
         });
       };
