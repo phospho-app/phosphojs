@@ -5,24 +5,30 @@ import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
 import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
+import { hashCode } from "./utils";
 
 class Phospho {
   apiKey: string;
   projectId: string;
   tick: number = 500;
   baseUrl: string = BASE_URL;
-  // context: any;
+  path_to_hash: string | null = null;
 
   // Queue of log events as a Mapping of {taskId: logEvent}
   logQueue = new Map<string, LogEvent>();
   latestTaskId: string | null = null;
   latestSessionId: string | null = null;
 
-  // constructor(context?) {
-  //   this.context = context;
-  // }
+  // Version Id
+  version_id: Promise<string> | string | null = null;
 
-  init({ apiKey, projectId, tick, baseUrl }: PhosphoInit = {}) {
+  async init({
+    apiKey,
+    projectId,
+    tick,
+    baseUrl,
+    path_to_hash,
+  }: PhosphoInit = {}) {
     if (apiKey) {
       this.apiKey = apiKey;
     } else {
@@ -35,6 +41,7 @@ class Phospho {
     }
     if (tick) this.tick = tick;
     if (baseUrl) this.baseUrl = baseUrl;
+    if (path_to_hash) this.version_id = hashCode(path_to_hash);
   }
 
   /**
@@ -53,6 +60,13 @@ class Phospho {
     return this.latestTaskId;
   }
 
+  /**
+   * Check if phospho has been initialized
+   */
+  isInitialized() {
+    return !!this.apiKey && !!this.projectId;
+  }
+
   private async _log({
     input,
     output,
@@ -64,6 +78,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     toLog,
+    version_id,
     ...rest
   }) {
     // If input or output are async, await them
@@ -97,6 +112,16 @@ class Phospho {
     this.latestSessionId = sessionId;
     this.latestTaskId = taskId;
 
+    // Handle version_id
+    if (this.version_id instanceof Promise) {
+      version_id = await this.version_id;
+    } else if (
+      typeof version_id !== "string" &&
+      typeof this.version_id === "string"
+    ) {
+      version_id = this.version_id;
+    }
+
     const logContent = {
       // The UTC timestamp rounded to the second
       client_created_at: Math.floor(Date.now() / 1000),
@@ -104,6 +129,7 @@ class Phospho {
       project_id: this.projectId,
       session_id: sessionId,
       task_id: taskId,
+      version_id: version_id,
       // Input
       input: extractedInputOutputToLog.inputToLog,
       raw_input: extractedInputOutputToLog.rawInputToLog,
@@ -218,6 +244,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     stream,
+    version_id,
     ...rest
   }: LogContent) {
     // Verify if phospho.init has been called
@@ -245,6 +272,7 @@ class Phospho {
         outputToStrFunction,
         concatenateRawOutputsIfTaskIdExists,
         toLog: true, // Always log if stream=False
+        version_id,
         ...rest,
       });
     }
@@ -268,16 +296,33 @@ class Phospho {
     if (output[Symbol.asyncIterator]) {
       const originalOutput = output[Symbol.asyncIterator];
       output[Symbol.asyncIterator] = async function* () {
-      const iterator = originalOutput.call(output);
+        const iterator = originalOutput.call(output);
 
-      // TODO: Improve this syntax
-      while (true) {
-        const { done, value } = await iterator.next();
-        if (done) {
-          // Done logging, push the batch
+        // TODO: Improve this syntax
+        while (true) {
+          const { done, value } = await iterator.next();
+          if (done) {
+            // Done logging, push the batch
+            phospho._log({
+              input,
+              output: null,
+              sessionId,
+              taskId: logTaskId,
+              rawInput,
+              rawOutput,
+              inputToStrFunction,
+              outputToStrFunction,
+              concatenateRawOutputsIfTaskIdExists,
+              toLog: true, // Log if done
+              version_id,
+              ...rest,
+            });
+            break;
+          }
+          // Log the value
           phospho._log({
             input,
-            output: null,
+            output: value,
             sessionId,
             taskId: logTaskId,
             rawInput,
@@ -285,27 +330,12 @@ class Phospho {
             inputToStrFunction,
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
-            toLog: true, // Log if done
+            toLog: false, // Don't log if not done
+            version_id,
             ...rest,
           });
-          break;
-          }
-          // Log the value
-          phospho._log({
-          input,
-          output: value,
-          sessionId,
-          taskId: logTaskId,
-          rawInput,
-          rawOutput,
-          inputToStrFunction,
-          outputToStrFunction,
-          concatenateRawOutputsIfTaskIdExists,
-          toLog: false, // Don't log if not done
-          ...rest,
-          });
-        yield value;
-      }
+          yield value;
+        }
       };
     }
 
@@ -328,6 +358,7 @@ class Phospho {
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
             toLog: false, // Don't log if not done
+            version_id,
             ...rest,
           });
           yield value;
@@ -344,6 +375,7 @@ class Phospho {
           outputToStrFunction,
           concatenateRawOutputsIfTaskIdExists,
           toLog: true, // Log if done
+          version_id,
           ...rest,
         });
       };
@@ -373,14 +405,14 @@ class Phospho {
       const data = {
         batched_log_events: batchedLogContent,
       };
-      const response = await axios
+      await axios
         .post(url, data, {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             "Content-Type": "application/json",
           },
         })
-        .then((response) => {
+        .then(() => {
           // Clear the log queue from the log events where toLog is true
           batchedLogEvents.forEach((logEvent) => {
             this.logQueue.delete(logEvent.id);
@@ -396,7 +428,7 @@ class Phospho {
   // Used to delay the sending of the batch and to avoid sending too many requests
   private debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
 
-  wrap = (fn) => {
+  wrap = (fn: Function) => {
     // If Async function, return a wrapped async function
     if (typeof fn === "function") {
       return async (...args) => {
