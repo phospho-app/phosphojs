@@ -5,24 +5,86 @@ import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
 import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
+import { hashCode } from "./utils";
 
+/**
+ * Phospho class for logging and processing events
+ * @class
+ */
 class Phospho {
+  /**
+   * @property {string} apiKey - The API key for authentication, found in your Phospho dashboard
+   */
   apiKey: string;
+  /**
+   * @property {string} projectId - The project id for the project you want to log events to, found in your Phospho dashboard
+   */
   projectId: string;
+  /**
+   * @property {number} tick - The delay in milliseconds for debounced operations
+   * @default 500
+   */
   tick: number = 500;
+  /**
+   * @property {string} baseUrl - The base URL for API requests, defaults to the Phospho API
+   * @default "https://api.phospho.ai/v2"
+   */
   baseUrl: string = BASE_URL;
-  // context: any;
+  /**
+   * @property {string} pathToH
+  ash - The path to your codebase to hash for versioning
+   * @default process.cwd()
+   * @usecase phospho.init({pathToHash: "src"}) // Mark versions with a hash of the src directory
+   * @usecase phospho.init({pathToHash: null}) // Disable auto-versioning
+   */
+  pathToHash: string | string[] | null = process.cwd();
 
   // Queue of log events as a Mapping of {taskId: logEvent}
+  /**
+   * @property {Map<string, LogEvent>} logQueue - The queue of log events to be sent to Phospho
+   */
   logQueue = new Map<string, LogEvent>();
+  /**
+   * @property {string | null} latestTaskId - The latest task id generated
+   */
   latestTaskId: string | null = null;
+  /**
+   * @property {string | null} latestSessionId - The latest session id generated
+   */
   latestSessionId: string | null = null;
 
-  // constructor(context?) {
-  //   this.context = context;
-  // }
+  // Version ID
+  /**
+   * @property {Promise<string> | string | null} version_id - The version id of your app, to be used for versioning
+   */
+  versionId: Promise<string> | string | null = null;
 
-  init({ apiKey, projectId, tick, baseUrl }: PhosphoInit = {}) {
+  /**
+   * Initialize the Phospho instance
+   *
+   * Basic usage:
+   *
+   * phospho.init({apiKey: "...", projectId: "..."})
+   *
+   * or
+   *
+   * phospho.init() // Will look for PHOSPHO_API_KEY and PHOSPHO_PROJECT_ID in the environment variables
+   *
+   * @param {PhosphoInit} options - The initialization options
+   * @param {string} [options.apiKey] - The API key
+   * @param {string} [options.projectId] - The project ID
+   * @param {number} [options.tick] - The tick value for debounced operations, no need to change unless you know what you're doing
+   * @param {string} [options.baseUrl] - The base URL for API requests, defaults to the Phospho API
+   * @param {string | string[] | null} [options.pathToHash] - Defaults to the current working directory, will tag incoming logs with the hash of your codebase for auto-versioning, set to null to disable
+   * @returns {Promise<void>}
+   */
+  async init({
+    apiKey,
+    projectId,
+    tick,
+    baseUrl,
+    pathToHash,
+  }: PhosphoInit = {}): Promise<void> {
     if (apiKey) {
       this.apiKey = apiKey;
     } else {
@@ -35,22 +97,35 @@ class Phospho {
     }
     if (tick) this.tick = tick;
     if (baseUrl) this.baseUrl = baseUrl;
+    if (pathToHash) {
+      this.versionId = hashCode(pathToHash);
+    }
   }
 
   /**
-   * Generate a new session id
+   * Generate a new session ID
+   * @returns {string} The new session ID
    */
-  newSession() {
+  newSession(): string {
     this.latestSessionId = randomUUID();
     return this.latestSessionId;
   }
 
   /**
-   * Generate a new task id
+   * Generate a new task ID
+   * @returns {string} The new task ID
    */
-  newTask() {
+  newTask(): string {
     this.latestTaskId = randomUUID();
     return this.latestTaskId;
+  }
+
+  /**
+   * Check if phospho has been initialized
+   * @returns {boolean} Whether phospho has been initialized
+   */
+  isInitialized(): boolean {
+    return !!this.apiKey && !!this.projectId;
   }
 
   private async _log({
@@ -64,6 +139,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     toLog,
+    versionId,
     ...rest
   }) {
     // If input or output are async, await them
@@ -97,6 +173,16 @@ class Phospho {
     this.latestSessionId = sessionId;
     this.latestTaskId = taskId;
 
+    // Handle version_id
+    if (this.versionId instanceof Promise) {
+      versionId = await this.versionId;
+    } else if (
+      typeof versionId !== "string" &&
+      typeof this.versionId === "string"
+    ) {
+      versionId = this.versionId;
+    }
+
     const logContent = {
       // The UTC timestamp rounded to the second
       client_created_at: Math.floor(Date.now() / 1000),
@@ -104,6 +190,7 @@ class Phospho {
       project_id: this.projectId,
       session_id: sessionId,
       task_id: taskId,
+      version_id: versionId,
       // Input
       input: extractedInputOutputToLog.inputToLog,
       raw_input: extractedInputOutputToLog.rawInputToLog,
@@ -218,6 +305,7 @@ class Phospho {
     outputToStrFunction,
     concatenateRawOutputsIfTaskIdExists,
     stream,
+    versionId,
     ...rest
   }: LogContent) {
     // Verify if phospho.init has been called
@@ -245,6 +333,7 @@ class Phospho {
         outputToStrFunction,
         concatenateRawOutputsIfTaskIdExists,
         toLog: true, // Always log if stream=False
+        versionId,
         ...rest,
       });
     }
@@ -268,16 +357,33 @@ class Phospho {
     if (output[Symbol.asyncIterator]) {
       const originalOutput = output[Symbol.asyncIterator];
       output[Symbol.asyncIterator] = async function* () {
-      const iterator = originalOutput.call(output);
+        const iterator = originalOutput.call(output);
 
-      // TODO: Improve this syntax
-      while (true) {
-        const { done, value } = await iterator.next();
-        if (done) {
-          // Done logging, push the batch
+        // TODO: Improve this syntax
+        while (true) {
+          const { done, value } = await iterator.next();
+          if (done) {
+            // Done logging, push the batch
+            phospho._log({
+              input,
+              output: null,
+              sessionId,
+              taskId: logTaskId,
+              rawInput,
+              rawOutput,
+              inputToStrFunction,
+              outputToStrFunction,
+              concatenateRawOutputsIfTaskIdExists,
+              toLog: true, // Log if done
+              versionId,
+              ...rest,
+            });
+            break;
+          }
+          // Log the value
           phospho._log({
             input,
-            output: null,
+            output: value,
             sessionId,
             taskId: logTaskId,
             rawInput,
@@ -285,27 +391,12 @@ class Phospho {
             inputToStrFunction,
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
-            toLog: true, // Log if done
+            toLog: false, // Don't log if not done
+            versionId,
             ...rest,
           });
-          break;
-          }
-          // Log the value
-          phospho._log({
-          input,
-          output: value,
-          sessionId,
-          taskId: logTaskId,
-          rawInput,
-          rawOutput,
-          inputToStrFunction,
-          outputToStrFunction,
-          concatenateRawOutputsIfTaskIdExists,
-          toLog: false, // Don't log if not done
-          ...rest,
-          });
-        yield value;
-      }
+          yield value;
+        }
       };
     }
 
@@ -328,6 +419,7 @@ class Phospho {
             outputToStrFunction,
             concatenateRawOutputsIfTaskIdExists,
             toLog: false, // Don't log if not done
+            versionId,
             ...rest,
           });
           yield value;
@@ -344,6 +436,7 @@ class Phospho {
           outputToStrFunction,
           concatenateRawOutputsIfTaskIdExists,
           toLog: true, // Log if done
+          versionId,
           ...rest,
         });
       };
@@ -352,6 +445,7 @@ class Phospho {
 
   /**
    * Send a batch of log events to Phospho
+   * @returns {Promise<void>}
    */
   async sendBatch() {
     try {
@@ -373,14 +467,14 @@ class Phospho {
       const data = {
         batched_log_events: batchedLogContent,
       };
-      const response = await axios
+      await axios
         .post(url, data, {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             "Content-Type": "application/json",
           },
         })
-        .then((response) => {
+        .then(() => {
           // Clear the log queue from the log events where toLog is true
           batchedLogEvents.forEach((logEvent) => {
             this.logQueue.delete(logEvent.id);
@@ -396,7 +490,12 @@ class Phospho {
   // Used to delay the sending of the batch and to avoid sending too many requests
   private debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
 
-  wrap = (fn) => {
+  /**
+   * Wrap a function to automatically log its input and output
+   * @param {Function} fn - The function to wrap
+   * @returns {Function} The wrapped function
+   */
+  wrap = (fn: Function): Function => {
     // If Async function, return a wrapped async function
     if (typeof fn === "function") {
       return async (...args) => {

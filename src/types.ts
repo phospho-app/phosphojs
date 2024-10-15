@@ -3,6 +3,7 @@ export interface PhosphoInit {
   projectId?: string;
   tick?: number;
   baseUrl?: string;
+  pathToHash?: string | string[] | null;
 }
 
 export interface LogContent {
