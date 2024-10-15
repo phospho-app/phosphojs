@@ -7,28 +7,75 @@ import { BASE_URL } from "./config";
 import { sendUserFeedback } from "./user-feedback";
 import { hashCode } from "./utils";
 
+/**
+ * Phospho class for logging and processing events
+ * @class
+ */
 class Phospho {
+  /**
+   * @property {string} apiKey - The API key for authentication, found in your Phospho dashboard
+   */
   apiKey: string;
+  /**
+   * @property {string} projectId - The project id for the project you want to log events to, found in your Phospho dashboard
+   */
   projectId: string;
+  /**
+   * @property {number} tick - The delay in milliseconds for debounced operations
+   * @default 500
+   */
   tick: number = 500;
+  /**
+   * @property {string} baseUrl - The base URL for API requests, defaults to the Phospho API
+   * @default "https://api.phospho.ai/v2"
+   */
   baseUrl: string = BASE_URL;
+  /**
+   * @property {string} path_to_hash - The path to your codebase to hash for versioning
+   * @example "process.cwd()"
+   */
   path_to_hash: string | null = null;
 
   // Queue of log events as a Mapping of {taskId: logEvent}
+  /**
+   * @property {Map<string, LogEvent>} logQueue - The queue of log events to be sent to Phospho
+   */
   logQueue = new Map<string, LogEvent>();
+  /**
+   * @property {string | null} latestTaskId - The latest task id generated
+   */
   latestTaskId: string | null = null;
+  /**
+   * @property {string | null} latestSessionId - The latest session id generated
+   */
   latestSessionId: string | null = null;
 
-  // Version Id
+  // Version ID
+  /**
+   * @property {Promise<string> | string | null} version_id - The version id of your app, to be used for versioning
+   */
   version_id: Promise<string> | string | null = null;
 
+  /**
+   * Initialize the Phospho instance
+   *
+   * Basic usage: phospho.init({apiKey: "...", projectId: "..."})
+   *
+   * @param {PhosphoInit} options - The initialization options
+   * @param {string} [options.apiKey] - The API key
+   * @param {string} [options.projectId] - The project ID
+   * @param {number} [options.tick] - The tick value for debounced operations
+   * @param {string} [options.baseUrl] - The base URL for API requests
+   * @param {string} [options.path_to_hash] - The path to hash for version identification
+   * @returns {Promise<void>}
+   */
   async init({
     apiKey,
     projectId,
     tick,
     baseUrl,
     path_to_hash,
-  }: PhosphoInit = {}) {
+  }: PhosphoInit = {}): Promise<void> {
     if (apiKey) {
       this.apiKey = apiKey;
     } else {
@@ -41,29 +88,37 @@ class Phospho {
     }
     if (tick) this.tick = tick;
     if (baseUrl) this.baseUrl = baseUrl;
-    if (path_to_hash) this.version_id = hashCode(path_to_hash);
+    if (path_to_hash) {
+      this.version_id = hashCode(path_to_hash);
+    } else {
+      path_to_hash = process.cwd();
+      this.version_id = hashCode(path_to_hash);
+    }
   }
 
   /**
-   * Generate a new session id
+   * Generate a new session ID
+   * @returns {string} The new session ID
    */
-  newSession() {
+  newSession(): string {
     this.latestSessionId = randomUUID();
     return this.latestSessionId;
   }
 
   /**
-   * Generate a new task id
+   * Generate a new task ID
+   * @returns {string} The new task ID
    */
-  newTask() {
+  newTask(): string {
     this.latestTaskId = randomUUID();
     return this.latestTaskId;
   }
 
   /**
    * Check if phospho has been initialized
+   * @returns {boolean} Whether phospho has been initialized
    */
-  isInitialized() {
+  isInitialized(): boolean {
     return !!this.apiKey && !!this.projectId;
   }
 
@@ -384,6 +439,7 @@ class Phospho {
 
   /**
    * Send a batch of log events to Phospho
+   * @returns {Promise<void>}
    */
   async sendBatch() {
     try {
@@ -428,7 +484,12 @@ class Phospho {
   // Used to delay the sending of the batch and to avoid sending too many requests
   private debouncedProcessQueue = debounce(() => this.sendBatch(), this.tick);
 
-  wrap = (fn: Function) => {
+  /**
+   * Wrap a function to automatically log its input and output
+   * @param {Function} fn - The function to wrap
+   * @returns {Function} The wrapped function
+   */
+  wrap = (fn: Function): Function => {
     // If Async function, return a wrapped async function
     if (typeof fn === "function") {
       return async (...args) => {

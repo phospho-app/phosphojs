@@ -52,9 +52,12 @@ export const hashCode = async (
     }
     const result = contentHash.digest("hex");
     return result.slice(0, length);
+  } else if (typeof directory === "string") {
+    const result = await getDirectoryHash(directory);
+    return result.slice(0, length);
+  } else {
+    throw new Error("Invalid input type");
   }
-  const result = await getDirectoryHash(directory);
-  return result.slice(0, length);
 };
 
 /**
