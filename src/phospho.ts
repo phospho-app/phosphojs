@@ -1,5 +1,5 @@
 import axios from "axios";
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 import { debounce, lookupEnvVariable } from "./utils";
 import { PhosphoInit, LogContent, LogEvent, UserFeedback } from "./types";
 import { getInputOutput, extractMetadataFromInputOutput } from "./extractor";
