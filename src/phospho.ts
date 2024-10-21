@@ -33,11 +33,12 @@ class Phospho {
   /**
    * @property {string} pathToH
   ash - The path to your codebase to hash for versioning
-   * @default process.cwd()
+   * @default undefined
    * @usecase phospho.init({pathToHash: "src"}) // Mark versions with a hash of the src directory
    * @usecase phospho.init({pathToHash: null}) // Disable auto-versioning
+   * @usecase phospho.init({pathToHash: undefined}) // Use the current working directory
    */
-  pathToHash: string | string[] | null = process.cwd();
+  pathToHash: string | string[] | null | undefined = undefined;
 
   // Queue of log events as a Mapping of {taskId: logEvent}
   /**
@@ -55,9 +56,9 @@ class Phospho {
 
   // Version ID
   /**
-   * @property {Promise<string> | string | null} version_id - The version id of your app, to be used for versioning
+   * @property {string | null} version_id - The version id of your app, to be used for versioning
    */
-  versionId: Promise<string> | string | null = null;
+  versionId: string | null = null;
 
   /**
    * Initialize the Phospho instance
@@ -98,7 +99,11 @@ class Phospho {
     if (tick) this.tick = tick;
     if (baseUrl) this.baseUrl = baseUrl;
     if (pathToHash) {
-      this.versionId = hashCode(pathToHash);
+      this.versionId = await hashCode(pathToHash);
+      console.log("Logging to Phospho with version ID", this.versionId);
+    } else if (pathToHash === undefined) {
+      this.versionId = await hashCode(process.cwd());
+      console.log("Logging to Phospho with version ID", this.versionId);
     }
   }
 
@@ -174,12 +179,7 @@ class Phospho {
     this.latestTaskId = taskId;
 
     // Handle version_id
-    if (this.versionId instanceof Promise) {
-      versionId = await this.versionId;
-    } else if (
-      typeof versionId !== "string" &&
-      typeof this.versionId === "string"
-    ) {
+    if (typeof versionId !== "string" && typeof this.versionId === "string") {
       versionId = this.versionId;
     }
 
